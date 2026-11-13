@@ -2243,7 +2243,7 @@ function renderRank(){
     tr.append(n,nm,rk,m);el.appendChild(tr);
   });
   const others=online.filter(o=>o.id!==uid).length;
-  $('rankNote').textContent=rankState==='off'?'온라인 랭킹에 연결되지 않았습니다. 지금은 가상 부대와 겨룹니다.'
+  $('rankNote').textContent=rankState==='off'?'온라인 랭킹은 업데이트 예정입니다. 지금은 가상 부대와 겨룹니다.'
     :rankState==='wait'?'온라인 랭킹을 불러오는 중입니다. 가상 부대는 바로 볼 수 있습니다.'
     :others?'접속한 다른 부대 '+others+'곳과 가상 부대가 함께 표시됩니다.':'아직 다른 부대가 없습니다. 가상 부대와 먼저 겨뤄 보세요.';
 }
