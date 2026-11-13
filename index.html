@@ -2286,18 +2286,29 @@ const OKEY='dangjik-orient';
 let rot=false,mode=null;
 try{const v=localStorage.getItem(OKEY);if(v==='port'||v==='land')mode=v;}catch(e){}
 if(!mode)mode=window.innerHeight>=window.innerWidth?'port':'land';
+/* 화면 크기: 홈 화면 앱(웹 앱)에서 돌렸다 되돌리면 innerHeight가 늦게 바뀌는 경우가 있어
+   여러 값 중 실제 화면에 맞는 값을 쓰고, 돌린 직후 몇 번 더 맞춘다 */
+function viewSize(){
+  const de=document.documentElement,vv=window.visualViewport;
+  const w=Math.round(vv&&vv.width||de.clientWidth||window.innerWidth),h=Math.round(Math.max(de.clientHeight||0,window.innerHeight||0,vv&&vv.height||0));
+  return [w,h];
+}
 function layout(){
-  const w=window.innerWidth,h=window.innerHeight,r=$('root'),wide=w>h,eff=wide?'land':mode;
+  const vs=viewSize(),w=vs[0],h=vs[1],r=$('root'),wide=w>h,eff=wide?'land':mode;
   r.classList.toggle('port',eff==='port');$('orientBtn').hidden=wide;$('orientBtn').textContent=mode==='port'?'가로로':'세로로';
   r.style.left='0px';
   if(eff==='land'){
     rot=!wide;
     if(rot){r.style.width=h+'px';r.style.height=w+'px';r.style.transform='rotate(90deg) translateY(-100%)';}
-    else{r.style.width=w+'px';r.style.height=h+'px';r.style.transform='none';}
-  }else{rot=false;r.style.width=w+'px';r.style.height=h+'px';r.style.transform='none';}
+    else{r.style.width='100%';r.style.height='100%';r.style.transform='none';}
+  }else{rot=false;r.style.width='100%';r.style.height='100%';r.style.transform='none';}
   if(V3)V3.resize();
 }
-window.addEventListener('resize',layout);layout();
+let layT=[];
+function relayout(){layout();layT.forEach(clearTimeout);layT=[120,350,800].map(ms=>setTimeout(layout,ms));}
+window.addEventListener('resize',relayout);window.addEventListener('orientationchange',relayout);
+if(window.visualViewport)window.visualViewport.addEventListener('resize',relayout);
+window.addEventListener('pageshow',relayout);layout();
 $('orientBtn').addEventListener('click',()=>{
   mode=mode==='port'?'land':'port';try{localStorage.setItem(OKEY,mode);}catch(e){}
   stopInput();layout();toast(mode==='land'?(rot?'가로 화면입니다. 휴대폰을 가로로 돌려 잡으세요':'가로 화면입니다'):'세로 화면입니다');
