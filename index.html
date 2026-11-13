@@ -877,7 +877,7 @@ const wpick=a=>{let t=a.reduce((s,x)=>s+x[1],0)*R();for(const x of a){t-=x[1];if
 const SPEED=1.5, SHIFT=900, START=17*60+30, DUE=90, MINWORK=1500;   // 게임 1.5분/초, 근무 1회 = 실제 10분
 const RANKS=['하사','중사','상사','원사'];
 /* 호봉 하나 오르는 데 필요한 공적(계급별). 5호봉이 되면 아래 진급 조건을 채워야 다음 계급 */
-const HB_NEED=[70,220,550,1300];
+const HB_NEED=[900,1800,2700,4050];
 const PROMO=[{c:1,r:60},{c:3,r:70},{c:6,r:80}];
 const HB_MAX=5,HB_TOP=30;
 const MULT=[1,2,3,4.5];
@@ -1936,7 +1936,7 @@ function committee(){
     {t:'잘못을 깨끗이 인정한다 (한 단계 가벼운 처분)',run(){
       S.pen=0;S.rep=clamp(S.rep+4,0,100);S.stats.discs++;
       if(heavy){S.cut=3;hist('감봉 3회 근무','bad');return {tone:'disc',stamp:'감봉',x:'반성하는 태도가 참작됐습니다. 강등 대신 감봉 3회 근무입니다.',out:[{x:'감봉 3회',c:'down'},{x:'평판 +4',c:'up'}]};}
-      const loss=Math.round(hbNeed()*.3)||10;const b=S.merit;addMerit(-loss);
+      const loss=Math.round(hbNeed()*.1)||10;const b=S.merit;addMerit(-loss);
       hist('견책','bad');return {tone:'disc',stamp:'견책',x:'견책 처분을 받았습니다. 솔직한 태도는 좋게 봤다고 합니다.',out:[{x:'공적 '+fmt(S.merit-b),c:'down'},{x:'평판 +4',c:'up'}]};}},
     {t:'표창 1개로 상쇄한다'+(S.commend?'':' (표창 없음)'),dis:!S.commend,run(){
       S.commend--;S.pen=0;hist('표창으로 징계 상쇄','good');
