@@ -1595,6 +1595,8 @@ function lifeFix(){
   RE.forEach(h=>{if(!(r.px[h.id]>0))r.px[h.id]=h.p;});
   /* 예전 청약 4단계에서 당첨된 집을 옮겨 온다 */
   if(!L.mig){L.mig=1;const old=['one','sapt','mapt','pent'],lv=S.home&&S.home.lv||0;for(let i=0;i<lv;i++)r.own[old[i]]={buy:RE_BY[old[i]].p};if(lv)r.live=old[lv-1];}
+  /* 예전 방식으로 넣어 두고 발표를 못 받은 청약금은 돌려준다(먼저 새 버전을 연 경우에도) */
+  {const lv=S.home&&S.home.lv||0;if(S.home&&S.home.app&&HOMES[lv]){S.gold+=HOMES[lv].cost;S.home.app=false;L.refund=HOMES[lv].cost;}}
   if(!L.edu||typeof L.edu!=='object')L.edu={done:[],cur:null};if(!Array.isArray(L.edu.done))L.edu.done=[];
   if(!L.car||typeof L.car!=='object')L.car={own:null};
   if(!L.camp||typeof L.camp!=='object')L.camp={gear:[],book:false,buff:0};if(!Array.isArray(L.camp.gear))L.camp.gear=[];
@@ -2375,6 +2377,7 @@ function goHome(){
   $('sleepText').textContent=(S.day-1)+'일차 근무를 마치고 퇴근했습니다. 푹 자고 17:30에 '+S.day+'일차 근무로 출근합니다.';
   $('sleep').hidden=false;
 }
+function lifeNotice(){const L=lifeFix();if(L.refund){log('청약이 새 부동산 제도로 바뀌어 예전 청약금 '+fmt(L.refund)+' 골드를 돌려받았습니다','up');toast('예전 청약금 '+fmt(L.refund)+' 골드 환급');delete L.refund;save();}}
 function wake(){
   restFrom=0;S.rest=false;$('sleep').hidden=true;SFX.play('wake');
   for(let i=0;i<12;i++)stockTick(true);
@@ -2918,7 +2921,7 @@ setInterval(()=>{if(S&&!paused)save();},5000);
 setInterval(()=>flushCloud(false),20000);
 function showGate(msg){S=null;paused=true;$('loading').hidden=true;$('app').hidden=true;$('sleep').hidden=true;$('gate').hidden=false;if(msg)$('gateErr').textContent=msg;}
 function tryStart(state,from){
-  try{start(state,false);return true;}
+  try{start(state,false);setTimeout(()=>{try{lifeNotice();}catch(e){}},1500);return true;}
   catch(e){
     try{localStorage.setItem(KEY+'-broken',JSON.stringify(state));localStorage.removeItem(KEY);}catch(x){}
     showGate('저장된 근무를 불러오지 못해 새로 시작합니다. ('+from+': '+String(e&&e.message||e).slice(0,80)+')');return false;
