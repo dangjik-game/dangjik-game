@@ -2875,10 +2875,14 @@ $('soundBtn').addEventListener('click',()=>{$('soundBtn').textContent=SFX.toggle
 const COUPON={WELCOME:{g:1e4},DANGJIK:{g:5e4},GOLDRUSH:{g:1e6},TESTGOLD:{g:1e8,rep:1},GOLDSUIT:{wear:'gold'}};
 /* 금액별 1회용 쿠폰 3장씩: MAN100A(100만) · MAN1000A(1,000만) · EOK1A(1억) */
 [['MAN100',1e6],['MAN1000',1e7],['EOK1',1e8]].forEach(([n,g])=>['A','B','C'].forEach(x=>COUPON[n+x]={g}));
+/* 주식 쿠폰: 받는 순간의 시세를 산 값으로 친다 */
+[['HANBYUL','hb'],['DAEHAN','dh'],['VOLT','vt'],['AURORA','ar']].forEach(([n,id])=>[1,10].forEach(q=>COUPON[n+q]={stk:id,q}));
 function cpUse(v){
   const code=String(v||'').trim().toUpperCase(),c=COUPON[code];if(!Array.isArray(S.cpn))S.cpn=[];
   if(!code)return [0,'쿠폰 코드를 입력해 주세요.'];if(!c)return [0,'없는 쿠폰 코드예요. 철자를 확인해 주세요.'];
   if(!c.rep&&S.cpn.includes(code))return [0,'이미 사용한 쿠폰이에요.'];
+  if(c.stk){const k=STK.find(x=>x.id===c.stk),o=S.mk.own[c.stk],p=S.mk.p[c.stk];if(!k)return [0,'없는 쿠폰 코드예요.'];
+    S.cpn.push(code);o.n+=c.q;o.cost+=p*c.q;dirty.shop=true;cloudDirty=true;save();return [1,k.n+' '+c.q+'주를 받았어요 (지금 시세 '+fmt(p*c.q)+' 골드어치).'];}
   if(c.wear){const it=WEAR.find(x=>x.id===c.wear);if(!it)return [0,'없는 쿠폰 코드예요.'];if(S.wear.own.includes(it.id))return [0,'이미 '+it.n+'을(를) 갖고 있어요.'];
     S.cpn.push(code);S.wear.own.push(it.id);S.wear[it.c]=it.id;outfitNow();dirty.shop=true;cloudDirty=true;save();return [1,"'"+it.n+"'을(를) 받았어요. 바로 입혀 드렸어요."];}
   if(!c.rep)S.cpn.push(code);S.gold+=c.g;cloudDirty=true;save();return [1,fmt(c.g)+' 골드를 받았어요.'];
