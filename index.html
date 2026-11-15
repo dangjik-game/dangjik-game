@@ -158,7 +158,22 @@ h2{font-family:var(--display);font-weight:400;font-size:18px;margin:0;letter-spa
 .s-top b{flex:1;font-size:15px}
 .s-top .price{font-weight:700;font-size:15px}
 .chg{font-size:12px;font-variant-numeric:tabular-nums;color:var(--mute);min-width:58px;text-align:right}
-.chg.up{color:#ff9288}.chg.dn{color:#8fb8ff}
+.chg.up,.up{color:#ff7a6e}.chg.dn,.dn{color:#7fb0ff}
+.spark.up polyline{stroke:#ff7a6e}.spark.dn polyline{stroke:#7fb0ff}
+.srow.own{border-color:var(--brass);box-shadow:inset 3px 0 0 var(--brass)}
+.badge{font-style:normal;font-size:11px;font-weight:700;color:#231c08;background:var(--brass);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:2px}
+.s-tag{font-size:11px!important}.s-mine{font-size:13px!important;color:var(--text)!important}.s-mine b{font-variant-numeric:tabular-nums}
+.pf{background:#1a2018;border:2px solid var(--brass);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.pf.empty p{margin:0;font-size:13px;color:var(--mute)}.pf>b,.pf-head b{font-family:var(--display);font-weight:400;font-size:19px;color:var(--brass)}
+.pf-head{display:flex;align-items:baseline;justify-content:space-between}.pf-head span{font-size:12px;color:var(--mute)}
+.pf-sum{display:grid;grid-template-columns:1.2fr 1.2fr 1fr;gap:8px}
+.pf-sum div{background:var(--panel);border-radius:4px;padding:8px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.pf-sum small{font-size:11px;color:var(--mute)}.pf-sum strong{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}.pf-sum em{font-style:normal;font-size:13px;font-weight:700}
+.pf-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding-top:10px;border-top:1px solid var(--line)}
+.pf-n b{font-size:15px}.pf-n small,.pf-g small{display:block;font-size:11px;color:var(--mute);font-variant-numeric:tabular-nums}
+.pf-g{text-align:right}.pf-g strong{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}.pf-g small.up{color:#ff7a6e}.pf-g small.dn{color:#7fb0ff}
+.pf-b{grid-column:1/-1;display:grid;grid-template-columns:1fr 1.6fr;gap:6px}
+.pf-b button{min-height:36px;border-radius:3px;font-size:12px;font-weight:700;background:transparent;color:var(--text);border:1px solid var(--line)}
 .spark{width:100%;height:26px;display:block}
 .spark polyline{fill:none;stroke:var(--brass);stroke-width:1.5;vector-effect:non-scaling-stroke}
 .srow p{margin:0;font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
@@ -384,6 +399,7 @@ h2{font-family:var(--display);font-weight:400;font-size:18px;margin:0;letter-spa
         </div>
         <div class="stack shopcat" data-cat="stk" hidden>
           <div class="sec-head"><h2>주식</h2><button type="button" class="back" data-back="1">‹ 영외 목록</button></div>
+          <div id="myStk"></div>
           <p class="note" id="stkNews"></p>
           <div id="stocks" class="stack"></div>
         </div>
@@ -1000,7 +1016,12 @@ const UPS=[
   {k:'aide',n:'당직병 교육',d:'놓친 임무를 당직병이 대신 처리할 확률',v:l=>(40+6*l)+'%',base:500,g:1.9,max:9}
 ];
 /* 영외 생활: 주식(가상의 회사), 옷, 청약 */
-const STK=[{id:'jb',n:'짬밥식품',b:800,s:.025},{id:'gh',n:'군화제화',b:400,s:.03},{id:'cm',n:'철모전자',b:2500,s:.04},{id:'ys',n:'야식치킨',b:1200,s:.06},{id:'gr',n:'고라니모빌리티',b:5000,s:.09}];
+/* 모두 가상 회사. 대형주는 비싸고 덜 흔들리며, 소형주는 싸고 크게 흔들린다 */
+const STK=[
+  {id:'hb',n:'한별전자',b:72000,s:.022,t:'대형주 · 전자'},{id:'dh',n:'대한반도체',b:185000,s:.03,t:'대형주 · 반도체'},
+  {id:'vt',n:'볼트모터스',b:360000,s:.045,t:'해외 · 전기차'},{id:'ar',n:'오로라테크',b:520000,s:.028,t:'해외 · 빅테크'},
+  {id:'cm',n:'철모전자',b:2500,s:.04,t:'중소형주 · 전자'},{id:'jb',n:'짬밥식품',b:800,s:.025,t:'중소형주 · 식품'},{id:'gh',n:'군화제화',b:400,s:.03,t:'중소형주 · 의류'},
+  {id:'ys',n:'야식치킨',b:1200,s:.06,t:'중소형주 · 외식'},{id:'gr',n:'고라니모빌리티',b:5000,s:.09,t:'테마주 · 모빌리티'}];
 const NEWS_UP=['{n}, 신제품이 매점에서 품절','{n}, 깜짝 실적 발표','{n}, 대형 납품 계약 체결','{n}, 해외 진출 소식'];
 const NEWS_DN=['{n}, 제품 회수 사태','{n}, 대표 구설수','{n}, 납품 지연 논란','{n}, 공장 가동 중단'];
 const WEAR=[
@@ -2483,16 +2504,29 @@ function renderShop(){
     return;
   }
   $('stkNews').textContent=S.mk.news||'20초마다 시세가 바뀝니다. 기준가보다 쌀 때 사서 비쌀 때 파세요.';
-  $('stocks').innerHTML=STK.map(k=>{
-    const p=S.mk.p[k.id],h=S.mk.h[k.id],o=S.mk.own[k.id],prev=h.length>1?h[h.length-2]:p,ch=(p-prev)/prev*100;
+  const pct=v=>(v>=0?'+':'')+v.toFixed(1)+'%',cls=v=>v>0?'up':v<0?'dn':'';
+  /* 내 투자: 맨 위에 크게 */
+  let tv=0,tc=0;const mine=STK.filter(k=>S.mk.own[k.id].n>0);mine.forEach(k=>{tv+=S.mk.own[k.id].n*S.mk.p[k.id];tc+=S.mk.own[k.id].cost;});
+  const tg=Math.round(tv-tc),tr=tc?tg/tc*100:0;
+  $('myStk').innerHTML=!mine.length?'<div class="pf empty"><b>내 투자</b><p>아직 산 주식이 없습니다. 아래에서 종목을 골라 사 보세요.</p></div>':
+    '<div class="pf"><div class="pf-head"><b>내 투자</b><span>'+mine.length+'종목</span></div>'+
+    '<div class="pf-sum"><div><small>평가액</small><strong>'+fmt(tv)+'</strong></div><div><small>총 손익</small><strong class="'+cls(tg)+'">'+(tg>=0?'+':'')+fmt(tg)+'</strong><em class="'+cls(tg)+'">'+pct(tr)+'</em></div><div><small>넣은 돈</small><strong>'+fmt(tc)+'</strong></div></div>'+
+    mine.map(k=>{const o=S.mk.own[k.id],p=S.mk.p[k.id],avg=o.cost/o.n,g=Math.round(p*o.n-o.cost),r=(p/avg-1)*100;
+      return '<div class="pf-row"><div class="pf-n"><b>'+k.n+'</b><small>'+fmt(o.n)+'주 · 평균 '+fmt(avg)+' → 지금 '+fmt(p)+'</small></div><div class="pf-g"><strong class="'+cls(g)+'">'+pct(r)+'</strong><small class="'+cls(g)+'">'+(g>=0?'+':'')+fmt(g)+'</small></div>'+
+        '<div class="pf-b"><button type="button" class="sell" data-stk="'+k.id+'" data-side="s" data-n="1" data-own="'+o.n+'">1주 팔기</button><button type="button" class="sell" data-stk="'+k.id+'" data-side="s" data-n="all" data-own="'+o.n+'">전부 팔기 '+fmt(p*o.n)+'</button></div></div>';}).join('')+'</div>';
+  /* 종목 목록: 가진 종목이 먼저 */
+  const list=STK.slice().sort((a,b)=>(S.mk.own[b.id].n>0)-(S.mk.own[a.id].n>0));
+  $('stocks').innerHTML=list.map(k=>{
+    const p=S.mk.p[k.id],h=S.mk.h[k.id],o=S.mk.own[k.id],prev=h.length>1?h[h.length-2]:p,ch=(p-prev)/prev*100,day=(p/h[0]-1)*100;
     const lo=Math.min.apply(null,h),hi=Math.max.apply(null,h),sp=hi-lo||1;
     const pts=h.map((v,i)=>(h.length>1?i/(h.length-1)*100:50).toFixed(1)+','+(22-(v-lo)/sp*20).toFixed(1)).join(' ');
-    const gain=o.n?Math.round(p*o.n-o.cost):0;
-    return '<div class="srow"><div class="s-top"><b>'+k.n+'</b><span class="num price">'+fmt(p)+'</span><span class="chg '+(ch>0?'up':ch<0?'dn':'')+'">'+(ch>0?'▲ ':ch<0?'▼ ':'')+Math.abs(ch).toFixed(1)+'%</span></div>'+
-      '<svg class="spark" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+pts+'"/></svg>'+
-      '<p>'+(o.n?'보유 '+fmt(o.n)+'주 · 평균 '+fmt(o.cost/o.n)+' · 손익 '+(gain>=0?'+':'')+fmt(gain):'보유 없음 · 기준가 '+fmt(k.b))+'</p>'+
+    const gain=o.n?Math.round(p*o.n-o.cost):0,can=Math.floor(S.gold/p);
+    return '<div class="srow'+(o.n?' own':'')+'"><div class="s-top"><b>'+k.n+(o.n?' <i class="badge">보유 '+fmt(o.n)+'주</i>':'')+'</b><span class="num price">'+fmt(p)+'</span><span class="chg '+cls(ch)+'">'+(ch>0?'▲ ':ch<0?'▼ ':'')+Math.abs(ch).toFixed(1)+'%</span></div>'+
+      '<p class="s-tag">'+k.t+' · 기준가 '+fmt(k.b)+'</p>'+
+      '<svg class="spark '+cls(day)+'" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+pts+'"/></svg>'+
+      (o.n?'<p class="s-mine">내 손익 <b class="'+cls(gain)+'">'+(gain>=0?'+':'')+fmt(gain)+' ('+pct((p/(o.cost/o.n)-1)*100)+')</b></p>':'<p>지금 골드로 '+fmt(can)+'주까지 살 수 있습니다</p>')+
       '<div class="s-btns"><button type="button" data-stk="'+k.id+'" data-side="b" data-n="1" data-cost="'+p+'">1주 사기</button><button type="button" data-stk="'+k.id+'" data-side="b" data-n="10" data-cost="'+p*10+'">10주</button><button type="button" data-stk="'+k.id+'" data-side="b" data-n="max" data-cost="'+p+'">최대</button>'+
-      '<button type="button" class="sell" data-stk="'+k.id+'" data-side="s" data-n="1" data-own="'+o.n+'">1주 팔기</button><button type="button" class="sell" data-stk="'+k.id+'" data-side="s" data-n="all" data-own="'+o.n+'">전부 팔기</button></div></div>';}).join('');
+      '<button type="button" class="sell" data-stk="'+k.id+'" data-side="s" data-n="1" data-own="'+o.n+'"'+(o.n?'':' disabled')+'>1주 팔기</button><button type="button" class="sell" data-stk="'+k.id+'" data-side="s" data-n="all" data-own="'+o.n+'"'+(o.n?'':' disabled')+'>전부 팔기</button></div></div>';}).join('');
   const w=S.wear;
   $('sexRow').innerHTML='<div class="row"><b>캐릭터</b><p>지금은 '+(S.sex==='f'?'여군':'남군')+'입니다. 언제든 무료로 바꿀 수 있습니다.</p><button type="button" class="buy" id="sexBtn" data-cost="0">'+(S.sex==='f'?'남군으로':'여군으로')+'<small>무료</small></button></div>';
   $('wear').innerHTML=WEAR.map(it=>{
