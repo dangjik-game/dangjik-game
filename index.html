@@ -1672,7 +1672,7 @@ function lifeTiles(){
   const L=lifeFix(),r=L.re,h=liveH(),own=Object.keys(r.own).length,c=carNow(),p=L.pet;
   const val=Object.keys(r.own).reduce((a,id)=>a+(RE_BY[id].kw?0:r.px[id]),0);
   const T=(v,b,s1,s2,s3)=>'<button type="button" class="tile" data-view="'+v+'"><b>'+b+'</b><strong>'+esc(s1)+'</strong><span>'+esc(s2)+'</span><span>'+esc(s3)+'</span><em>들어가기 ›</em></button>';
-  return T('home','부동산',h?h.n+' 거주':'영내 숙소',own?'보유 '+own+'채 · 시세 '+fmt(val):'아직 내 집이 없습니다',r.app?'청약 신청 중 · 교대 때 발표':'청약 · 매매 · 월세')+
+  return T('home','부동산',h?h.n+' 거주':'독신자 숙소',own?'보유 '+own+'채 · 시세 '+fmt(val):'아직 내 집이 없습니다',r.app?'청약 신청 중 · 교대 때 발표':'청약 · 매매 · 월세')+
     T('edu','자기계발',L.edu.cur?EDU.find(x=>x.id===L.edu.cur.id).n+' 수강 중':'수강 중인 과정 없음','수료 '+L.edu.done.length+' / '+EDU.length,L.edu.cur?'남은 근무 '+L.edu.cur.left+'회':'자격증 · 학위')+
     T('car','자동차',c?c.n:'차 없음',c?'근무 수당 +'+c.g+'%':'경차부터 스포츠카까지','')+
     T('camp','캠핑',L.camp.book?'퇴근 후 캠핑 예약됨':L.camp.buff?'캠핑 효과 +'+L.camp.buff+'%':'예약 없음','장비 '+L.camp.gear.length+' / '+GEAR.length+' · 편안함 '+comfort(),L.camp.gear.includes('tent')?'':'텐트부터 장만하세요')+
@@ -1683,7 +1683,7 @@ const LB=(a,arg,label,cost,dis)=>'<button type="button" class="buy" data-life="'
 function lifeView(v){
   const L=lifeFix(),r=L.re;
   if(v==='home'){
-    const h=liveH();let s='<div class="row"><b>지금 사는 곳</b><p>'+(h?h.n+' · 근무 수당 +'+h.live+'%':'영내 숙소 · 아직 내 집이 없습니다')+(r.pts?' · 청약 가점 '+r.pts:'')+'</p></div>'+
+    const h=liveH();let s='<div class="row"><b>지금 사는 곳</b><p>'+(h?h.n+' · 근무 수당 +'+h.live+'%':'독신자 숙소 · 아직 내 집이 없습니다')+(r.pts?' · 청약 가점 '+r.pts:'')+'</p></div>'+
       '<p class="note">청약은 분양가(시세의 80%)로 싸게 사는 대신 운에 맡깁니다. 떨어지면 90%를 돌려받고 가점이 쌓입니다. 매매는 시세로 바로 삽니다. 살지 않는 집은 세를 놓아 근무마다 월세가 들어옵니다. 집값은 근무마다 오르내립니다.</p>';
     s+=RE.map(x=>{const o=r.own[x.id],px=Math.round(r.px[x.id]),ch=x.p?(px/x.p-1)*100:0;
       const info=(x.kw?'무료':'시세 '+fmt(px)+' ('+(ch>=0?'+':'')+ch.toFixed(0)+'%)')+(x.live?' · 살면 수당 +'+x.live+'%':'')+(x.kw?'':' · 월세 '+fmt(px*(x.rentK||.004))+'/근무')+(x.d?' · '+x.d:'');
@@ -2500,7 +2500,7 @@ function renderShop(){
   LIFE_V.forEach(v=>{if(shopView===v)$('life_'+v).innerHTML=lifeView(v);});updateShop();
 }
 function oldHomeUnused(){
-  const h=S.home;let hh='<div class="row"><b>지금 사는 곳</b><p>'+(h.lv?HOMES[h.lv-1].n+' · 근무 수당 +'+h.lv*10+'%':'영내 숙소 · 아직 내 집이 없습니다')+'</p></div>';
+  const h=S.home;let hh='<div class="row"><b>지금 사는 곳</b><p>'+(h.lv?HOMES[h.lv-1].n+' · 근무 수당 +'+h.lv*10+'%':'독신자 숙소 · 아직 내 집이 없습니다')+'</p></div>';
   if(h.lv<HOMES.length){const t=HOMES[h.lv];
     hh+='<div class="row"><b>'+t.n+'</b><p>청약금 '+fmt(t.cost)+' 골드 · 당첨 확률 '+Math.round(homeP()*100)+'%'+(h.pts?' (가점 '+h.pts+')':'')+' · 떨어지면 90% 환급</p>'+
       '<button type="button" class="buy" id="homeBtn" data-cost="'+(h.app?-1:t.cost)+'">'+(h.app?'신청 완료<small>근무 교대 때 발표</small>':'청약 넣기<small>'+fmt(t.cost)+' 골드</small>')+'</button></div>';}
