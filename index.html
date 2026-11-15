@@ -1545,19 +1545,21 @@ TWIST.forEach(x=>{x.chain=1;x.tw=1;x.st=x.qt[0];INC.push(x);INC_BY[x.id]=x;});
 /* ───── 영외 생활 확장: 부동산 · 자기계발 · 자동차 · 캠핑 · 적금 · 반려동물 ─────
    모두 가상의 이름과 숫자다. 근무가 끝날 때마다 lifeShift()가 한 번 돈다. */
 const RE=[
- {id:'kwan',n:'군 관사',p:0,lot:.35,live:5,rent:0,kw:1,d:'계급 중사 이상 무료 신청 · 팔거나 세놓을 수 없음'},
- {id:'one',n:'행복주택 원룸',p:30000,lot:.3,live:8,d:'청약 전용 공공주택'},
+ {id:'kwan',n:'군 관사',p:0,lot:.2,live:5,rent:0,kw:1,d:'계급 중사 이상 무료 신청 · 팔거나 세놓을 수 없음'},
+ {id:'one',n:'행복주택 원룸',p:30000,lot:.15,live:8,d:'청약 전용 공공주택'},
  {id:'villa',n:'투룸 빌라',p:120000,buy:1,live:10},
- {id:'offi',n:'역세권 오피스텔',p:250000,lot:.22,buy:1,live:12},
- {id:'sapt',n:'소형 아파트',p:600000,lot:.18,buy:1,live:15},
- {id:'napt',n:'신축 아파트',p:1500000,lot:.12,live:18,d:'청약 전용 · 분양가가 시세보다 쌈'},
+ {id:'offi',n:'역세권 오피스텔',p:250000,lot:.1,buy:1,live:12},
+ {id:'sapt',n:'소형 아파트',p:600000,lot:.07,buy:1,live:15},
+ {id:'napt',n:'신축 아파트',p:1500000,lot:.04,live:18,d:'청약 전용 · 분양가가 시세보다 쌈'},
  {id:'house',n:'전원주택',p:3000000,buy:1,live:20},
  {id:'town',n:'타운하우스',p:6000000,buy:1,live:24},
- {id:'mapt',n:'중형 아파트',p:12000000,lot:.08,buy:1,live:28},
+ {id:'mapt',n:'중형 아파트',p:12000000,lot:.025,buy:1,live:28},
  {id:'bapt',n:'대형 아파트',p:30000000,buy:1,live:34},
- {id:'pent',n:'강변 펜트하우스',p:100000000,lot:.04,buy:1,live:45},
+ {id:'pent',n:'강변 펜트하우스',p:100000000,lot:.01,buy:1,live:45},
  {id:'bldg',n:'꼬마 빌딩',p:500000000,buy:1,live:0,rentK:.008,d:'살 수는 없고 세만 놓을 수 있음'}
 ];
+/* 청약 당첨 확률: 낙첨될 때마다 가점이 쌓여 조금씩 오르지만 기본 확률의 2배를 넘지 않는다 */
+const lotP=h=>Math.min(h.lot*2,h.lot*(1+.1*lifeFix().re.pts));
 const RE_BY=Object.fromEntries(RE.map(x=>[x.id,x]));
 const EDU=[
  {id:'hist',n:'한국사 능력 시험',c:20000,s:2,e:{m:5},t:'공적 +5%'},
@@ -1641,7 +1643,7 @@ function lifeAct(a,arg){
 /* 근무가 끝날 때: 청약 발표, 집값, 월세, 교육, 적금, 캠핑, 반려동물 */
 function lifeShift(){
   const L=lifeFix(),r=L.re,out=[];
-  if(r.app){const h=RE_BY[r.app.id],p=clamp(h.lot+.03*r.pts,0,.9);
+  if(r.app){const h=RE_BY[r.app.id],p=lotP(h);
     if(R()<p){r.own[h.id]={buy:r.app.c};if(h.live&&(!liveH()||h.live>liveH().live))r.live=h.id;r.pts=0;hist(h.n+' 청약 당첨','up');out.push(['청약 발표','당첨! '+h.n]);}
     else{const back=Math.round(r.app.c*.9);S.gold+=back;r.pts++;out.push(['청약 발표',h.n+' 낙첨'+(back?' · '+fmt(back)+' 골드 환급':'')+' · 가점 +1']);}
     r.app=null;}
@@ -1688,7 +1690,7 @@ function lifeView(v){
       let btns='';
       if(o){btns=(x.live&&r.live!==x.id?LB('live',x.id,'이사하기',0):'')+(x.kw?'':LB('sell',x.id,'팔기<small>'+fmt(Math.round(px*.98))+'</small>',0));
         return '<div class="row re-own"><b>'+x.n+(r.live===x.id?' · 거주 중':' · 보유')+'</b><p>'+info+(x.kw?'':' · 산 값 '+fmt(o.buy))+'</p><div class="re-b">'+btns+'</div></div>';}
-      if(x.lot)btns+=LB('lot',x.id,r.app&&r.app.id===x.id?'신청 완료':'청약 '+Math.round(clamp(x.lot+.03*r.pts,0,.9)*100)+'%',x.kw?0:Math.round(x.p*.8),!!r.app);
+      if(x.lot)btns+=LB('lot',x.id,r.app&&r.app.id===x.id?'신청 완료':'청약 '+(lotP(x)*100).toFixed(lotP(x)<.1?1:0)+'%',x.kw?0:Math.round(x.p*.8),!!r.app);
       if(x.buy)btns+=LB('buy',x.id,'매매',px);
       return '<div class="row"><b>'+x.n+'</b><p>'+info+'</p><div class="re-b">'+btns+'</div></div>';}).join('');
     return s;}
