@@ -914,15 +914,17 @@ const wpick=a=>{let t=a.reduce((s,x)=>s+x[1],0)*R();for(const x of a){t-=x[1];if
 
 /* ───── 규칙 ───── */
 const SPEED=1.5, SHIFT=900, START=17*60+30, DUE=90, MINWORK=1500;   // 게임 1.5분/초, 근무 1회 = 실제 10분
-const RANKS=['하사','중사','상사','원사'];
-/* 호봉 하나 오르는 데 필요한 공적(계급별). 5호봉이 되면 아래 진급 조건을 채워야 다음 계급 */
-const HB_NEED=[900,1800,2700,4050];
-const PROMO=[{c:1,r:60},{c:3,r:70},{c:6,r:80}];
+const RANKS=['하사','중사','상사','원사','준위','소위','중위','대위','소령','중령','대령','준장','소장','중장','대장','참모총장'];
+/* 계급이 오를수록 한 번 근무에 버는 공적(MULT)과 수당(RATE)이 커진다.
+   호봉 하나에 필요한 공적은 어느 계급이든 근무 2~3회 분량이 되도록 MULT에 맞춘다 */
+const MULT=[1,2,3,4.5,5.5,6.5,7.5,9,11,13,15,18,21,25,30,36];
+const RATE=[3,8,18,45,60,75,90,110,135,165,200,250,310,380,460,560];
+const HB_NEED=MULT.map(m=>Math.round(500*m/10)*10);
+/* 5호봉에서 다음 계급으로 가려면 채워야 하는 누적 표창 수(c)와 평판(r) */
+const PROMO=[{c:1,r:60},{c:3,r:70},{c:6,r:80},{c:8,r:80},{c:10,r:82},{c:12,r:84},{c:14,r:85},{c:17,r:86},{c:20,r:88},{c:23,r:89},{c:26,r:90},{c:30,r:91},{c:34,r:92},{c:38,r:94},{c:42,r:95}];
 const HB_MAX=5,HB_TOP=30;
-const MULT=[1,2,3,4.5];
-const RATE=[3,8,18,45];
 /* 다른 부대 순위표에서 공적으로 계급을 짐작할 때 쓰는 기준 */
-const TH=[0,HB_NEED[0]*5,HB_NEED[0]*5+HB_NEED[1]*5,HB_NEED[0]*5+HB_NEED[1]*5+HB_NEED[2]*5];
+const TH=HB_NEED.reduce((a,n,i)=>{a.push(i?a[i-1]+HB_NEED[i-1]*5:0);return a;},[]);
 const WD=['월','화','수','목','금','토','일'];
 const WX=[['맑음',38],['비',14],['안개',10],['폭설',9],['한파',10],['폭염',8],['태풍',5],['강풍',6]];
 const BOSS={
@@ -1063,7 +1065,10 @@ const ACH=[
   {id:'look',n:'멋쟁이',d:'옷·모자·소품을 10가지 갖춘다',t:'부대 멋쟁이',g:20000,ok:s=>s.wear.own.length>=10},
   {id:'home',n:'내 집 마련',d:'청약에 당첨된다',t:'집주인',g:10000,ok:s=>s.home.lv>=1},
   {id:'pent',n:'한강이 보이는 삶',d:'펜트하우스에 입주한다',t:'펜트하우스 주인',g:1000000,ok:s=>s.home.lv>=HOMES.length},
-  {id:'top',n:'당직의 신',d:'원사로 진급한다',t:'전설의 부관',g:500000,ok:s=>s.rk>=3}
+  {id:'top',n:'당직의 신',d:'원사로 진급한다',t:'전설의 부관',g:500000,ok:s=>s.rk>=3},
+  {id:'ofc',n:'임관',d:'소위로 임관한다',t:'신임 소위',g:3000000,ok:s=>s.rk>=5},
+  {id:'gen',n:'별을 달다',d:'준장으로 진급한다',t:'장군',g:50000000,ok:s=>s.rk>=11},
+  {id:'cos',n:'군의 정점',d:'참모총장에 오른다',t:'참모총장',g:1000000000,ok:s=>s.rk>=15}
 ];
 const NPC=[['야식부대',40,18],['칼퇴부대',120,35],['커피수혈부대',300,60],['고라니부대',700,95],['넉가래부대',1500,140],['인수인계부대',3500,200],['새벽순찰부대',9000,280],['졸음퇴치부대',22000,380]];
 
@@ -1967,7 +1972,7 @@ function fix(o){
   ['sched','tasks','log','hist','recent'].forEach(n=>{if(!Array.isArray(o[n]))o[n]=[];});
   ['gold','merit','rk','rep','pen','commend','cut','day','clock','treat','seq'].forEach(n=>{if(typeof o[n]!=='number'||!isFinite(o[n]))o[n]=f[n];});
   if(typeof o.hb!=='number'||!isFinite(o.hb)){const old=Math.floor(o.rk)||0;o.hb=old>=5?10:old>=4?5:1;o.mb=o.merit;}
-  o.rk=clamp(Math.floor(o.rk),0,RANKS.length-1);o.hb=clamp(Math.floor(o.hb),1,o.rk>=3?HB_TOP:HB_MAX);if(typeof o.mb!=='number'||!isFinite(o.mb)||o.mb>o.merit)o.mb=o.merit;o.rep=clamp(Math.round(o.rep),0,100);o.clock=clamp(o.clock,0,SHIFT);
+  o.rk=clamp(Math.floor(o.rk),0,RANKS.length-1);o.hb=clamp(Math.floor(o.hb),1,o.rk>=RANKS.length-1?HB_TOP:HB_MAX);if(typeof o.mb!=='number'||!isFinite(o.mb)||o.mb>o.merit)o.mb=o.merit;o.rep=clamp(Math.round(o.rep),0,100);o.clock=clamp(o.clock,0,SHIFT);
   const m=o.meta;if(!m||!BOSS[m.boss]||!LUCK.some(l=>l[0]===m.luck)||typeof m.wd!=='number'||!WX.some(x=>x[0]===m.wx))o.meta=null;
   if(o.sex!=='f')o.sex='m';o.rest=!!o.rest;
   o.ach=Array.isArray(o.ach)?o.ach.filter(k=>ACH.some(a=>a.id===k)):[];if(!o.ach.includes(o.title))o.title=o.ach[0]||'';
@@ -2551,11 +2556,19 @@ function updateShop(){
 /* ───── 화면 ───── */
 function insignia(rk){
   const s='fill="none" stroke="#d6ad52" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"';
-  const n=Math.min(3,rk+1);let h='';
-  for(let i=0;i<n;i++){const y=30-i*7;h+='<path d="M9 '+(y-6)+'l11 6 11-6" '+s+'/>';}
-  if(rk>=3)h+='<path d="M9 9q11-9 22 0" '+s+'/>';
-  if(rk>=4)h+='<circle cx="20" cy="13" r="2.4" fill="#d6ad52"/>';
-  return h;
+  /* 부사관 갈매기, 준위 마름모, 위관 다이아몬드, 영관 무궁화, 장성 별 */
+  const row=(n,f)=>{let h='';const w=n>3?9.5:12.5;for(let i=0;i<n;i++)h+=f(20+(i-(n-1)/2)*w,20);return h;};
+  const SV='#e4e6ea';
+  if(rk<=3){const n=Math.min(3,rk+1);let h='';for(let i=0;i<n;i++){const y=30-i*7;h+='<path d="M9 '+(y-6)+'l11 6 11-6" '+s+'/>';}
+    if(rk>=3)h+='<path d="M9 9q11-9 22 0" '+s+'/>';return h;}
+  if(rk===4)return '<path d="M20 9l9 11-9 11-9-11z" fill="none" stroke="#d6ad52" stroke-width="3"/><circle cx="20" cy="20" r="3" fill="#d6ad52"/>';
+  const dia=(x,y)=>'<path d="M'+x+' '+(y-8)+'l5.5 8-5.5 8-5.5-8z" fill="'+SV+'"/>';
+  const flw=(x,y)=>{let h='';for(let k=0;k<5;k++){const a=k*1.2566-1.5708;h+='<circle cx="'+(x+Math.cos(a)*3.6).toFixed(1)+'" cy="'+(y+Math.sin(a)*3.6).toFixed(1)+'" r="2.9" fill="'+SV+'"/>';}return h+'<circle cx="'+x+'" cy="'+y+'" r="2" fill="#8a8f96"/>';};
+  const star=(x,y,o)=>{o=o||6.6;let p='';for(let k=0;k<10;k++){const a=k*.6283-1.5708,r=k%2?o*.42:o;p+=(k?'L':'M')+(x+Math.cos(a)*r).toFixed(1)+' '+(y+Math.sin(a)*r).toFixed(1);}return '<path d="'+p+'z" fill="'+SV+'"/>';};
+  if(rk<=7)return row(rk-4,dia);
+  if(rk<=10)return row(rk-7,flw);
+  if(rk<=14)return row(rk-10,(x,y)=>star(x,y,rk===14?5.2:6.6));
+  return row(4,(x,y)=>star(x,y-2,5.2))+'<path d="M6 30q14 8 28 0" fill="none" stroke="#d6ad52" stroke-width="2.4" stroke-linecap="round"/>';
 }
 const SKY=[[0,'#d9824a'],[60,'#7a4a5e'],[130,'#1d2540'],[420,'#0b1020'],[690,'#182244'],[780,'#c7785a'],[840,'#e9b77a'],[900,'#9fc6e6']];
 function hex(c){return [1,3,5].map(i=>parseInt(c.slice(i,i+2),16));}
