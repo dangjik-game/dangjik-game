@@ -1999,20 +1999,22 @@ function renderRankAlt(){
 }
 function moneyShort(v){return v>=1e8?(v/1e8).toFixed(v>=1e10?0:1).replace(/\.0$/,'')+'억원':v>=1e4?Math.round(v/1e4).toLocaleString('ko-KR')+'만원':fmt(v)+'원';}
 
-/* ── 자동 근무 1회권: 그날 근무 한 번 동안 잡무(정기·잡일)만 알아서 처리. 보상 70%, 하루(한국 날짜) 3장까지 ── */
-const AUTO_MAX=3,AUTO_K=2;
+/* ── 자동 근무 1회권: 그날 근무 한 번 동안 잡무(정기·잡일)만 알아서 처리. 보상 70%.
+   살 수 있는 수는 제한 없음. 첫 장 50만원, 같은 날(한국 날짜) 살 때마다 두 배. 다음 날 50만원으로 돌아간다 ── */
+const AUTO_BASE=500000;
+const autoCost=()=>AUTO_BASE*Math.pow(2,Math.min(30,autoFix().used));
 function autoFix(){if(!S.auto||typeof S.auto!=='object')S.auto={d:0,on:false,day:'',used:0};const t=kstDay();if(S.auto.day!==t){S.auto.day=t;S.auto.used=0;}return S.auto;}
 const autoLive=()=>{if(!S)return false;const a=autoFix();return a.d===S.day&&a.on;};
 const autoOk=t=>(t.k==='r'||t.k==='m')&&!urgent(t);
 function autoBtnTap(){
   if(!S||S.rest)return;const a=autoFix();
   if(a.d===S.day){a.on=!a.on;toast(a.on?'자동 근무를 다시 켰습니다':'자동 근무를 잠시 껐습니다');autoPaint();save();return;}
-  const c=shiftPay(AUTO_K),left=AUTO_MAX-a.used;
+  const c=autoCost();
   popOpen('<h3 class="pop-t">자동 근무 1회권</h3><p class="pop-l">이번 근무가 끝날 때까지 <b>정기 업무와 잡일</b>을 캐릭터가 알아서 찾아가 처리합니다.</p>'+
-    '<p class="pop-l">· 당직사령 호출, 돌발 상황, 미니게임은 직접 해야 합니다<br>· 자동으로 처리한 임무는 돈과 공적을 <b>70%</b>만 받습니다<br>· 하루(한국 시간)에 '+AUTO_MAX+'장까지 · 오늘 남은 '+left+'장</p>'+
-    '<p class="pop-g">'+fmt(c)+'원</p>',
-    [{t:'취소',c:'pop-no'},{t:left>0?'사서 켜기':'오늘은 다 썼습니다',fn:()=>{
-      if(left<=0)return false;if(S.gold<c){toast('돈이 모자랍니다');return false;}
+    '<p class="pop-l">· 당직사령 호출, 돌발 상황, 미니게임은 직접 해야 합니다<br>· 자동으로 처리한 임무는 돈과 공적을 <b>70%</b>만 받습니다<br>· 첫 장 50만원, 같은 날 살 때마다 두 배 · 오늘 '+a.used+'장 샀습니다<br>· 다음 날(한국 시간 0시)에 다시 50만원부터</p>'+
+    '<p class="pop-g">'+moneyShort(c)+'</p>',
+    [{t:'취소',c:'pop-no'},{t:'사서 켜기',fn:()=>{
+      if(S.gold<c){toast('돈이 모자랍니다');return false;}
       S.gold-=c;a.d=S.day;a.on=true;a.used++;hist('자동 근무 1회권 사용 -'+fmt(c)+'원');save();autoPaint();SFX.play('coin');toast('자동 근무를 시작합니다');return false;}}]);
 }
 let autoGo=null;
@@ -3526,7 +3528,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-195618';
+const VER='2026.11.16-195811';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
