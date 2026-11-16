@@ -2033,7 +2033,7 @@ let autoBusy=0;
 function autoTick(){
   if(!autoLive()||paused||S.rest||mgOpen||work||Date.now()<autoBusy)return;
   if(!$('scrim').hidden){/* 자동 근무 중 열린 결과 창은 바로 닫는다 */if(!openU)closeSheet();else return;}
-  if(tab!=='duty')return;
+  /* 영외·강화·랭킹 탭에 있어도 자동 근무는 계속 돈다 */
   const t=sorted().find(autoOk);if(!t)return;
   t.auto=1;autoBusy=Date.now()+900;
   const b=S.meta.boss,st=stationOf(t);
@@ -3595,7 +3595,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-204326';
+const VER='2026.11.17-054856';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
