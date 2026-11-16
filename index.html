@@ -310,6 +310,9 @@ h2{font-family:var(--display);font-weight:400;font-size:18px;margin:0;letter-spa
 .re-b.h{grid-column:1/-1;grid-row:auto;flex-direction:row;flex-wrap:wrap}.re-b.h .buy{flex:1;min-width:70px}
 .row.re-own{border-color:var(--brass)}
 .pet-in{grid-column:1;height:36px;background:#11150f;color:var(--text);border:1px solid var(--line);border-radius:3px;padding:0 8px;font:14px var(--body,inherit);user-select:text;-webkit-user-select:text}
+.upd-bar{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 8px);z-index:60;display:flex;align-items:center;gap:10px;background:var(--brass);color:#1b1708;border:2px solid #ffe7a3;border-radius:999px;padding:9px 18px;box-shadow:0 6px 18px #000c;font-size:14px;white-space:nowrap;animation:updIn .4s ease-out}
+.upd-bar b{font-family:var(--display);font-weight:400;font-size:17px}.upd-bar span{font-weight:700;font-size:13px;opacity:.8}
+@keyframes updIn{from{transform:translate(-50%,-30px);opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -2964,6 +2967,20 @@ $('resetBtn').addEventListener('click',()=>{
   showSheet();
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
+/* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
+const VER='2026.11.16-093244';
+function checkUpdate(){
+  if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
+  try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
+    const m=tx.match(/const VER='([^']+)'/);if(!m||m[1]===VER||$('updBar'))return;
+    const d=document.createElement('button');d.id='updBar';d.type='button';d.className='upd-bar';
+    d.innerHTML='<b>새 버전이 나왔어요</b><span>눌러서 업데이트</span>';
+    d.onclick=()=>{try{if(S)save();}catch(e){}location.replace(location.pathname+'?v='+encodeURIComponent(m[1]));};
+    document.body.appendChild(d);SFX.play('chime');
+  }).catch(()=>{});}catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate();});
+setInterval(checkUpdate,5*60e3);setTimeout(checkUpdate,4000);
 window.addEventListener('blur',stopInput);
 
 /* ───── 시작 ───── */
