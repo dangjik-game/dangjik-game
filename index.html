@@ -922,10 +922,14 @@ const RANKS=['하사','중사','상사','원사','준위','소위','중위','대
    호봉 하나에 필요한 공적은 어느 계급이든 근무 2~3회 분량이 되도록 MULT에 맞춘다 */
 const MULT=[1,2,3,4.5,5.5,6.5,7.5,9,11,13,15,18,21,25,30,36];
 const RATE=[3,8,18,45,60,75,90,110,135,165,200,250,310,380,460,560];
-const HB_NEED=MULT.map(m=>Math.round(500*m/10)*10);
+/* 높은 계급일수록 호봉 하나에 근무가 더 필요하다: 하사 1배 → 참모총장 2.5배 */
+const HB_SLOW=i=>1+.1*i;
+const HB_NEED=MULT.map((m,i)=>Math.round(500*m*HB_SLOW(i)/10)*10);
 /* 5호봉에서 다음 계급으로 가려면 채워야 하는 누적 표창 수(c)와 평판(r) */
 const PROMO=[{c:1,r:60},{c:3,r:70},{c:6,r:80},{c:8,r:80},{c:10,r:82},{c:12,r:84},{c:14,r:85},{c:17,r:86},{c:20,r:88},{c:23,r:89},{c:26,r:90},{c:30,r:91},{c:34,r:92},{c:38,r:94},{c:42,r:95}];
-const HB_MAX=5,HB_TOP=30;
+const HB_TOP=30;
+/* 진급 심사까지 채워야 하는 호봉: 부사관·준위 5, 위관 6, 영관 7, 장성 8 */
+const hbMax=rk=>rk<=4?5:rk<=7?6:rk<=10?7:8;
 /* 다른 부대 순위표에서 공적으로 계급을 짐작할 때 쓰는 기준 */
 const TH=HB_NEED.reduce((a,n,i)=>{a.push(i?a[i-1]+HB_NEED[i-1]*5:0);return a;},[]);
 const WD=['월','화','수','목','금','토','일'];
@@ -2058,7 +2062,7 @@ function fix(o){
   ['sched','tasks','log','hist','recent'].forEach(n=>{if(!Array.isArray(o[n]))o[n]=[];});
   ['gold','merit','rk','rep','pen','commend','cut','day','clock','treat','seq'].forEach(n=>{if(typeof o[n]!=='number'||!isFinite(o[n]))o[n]=f[n];});
   if(typeof o.hb!=='number'||!isFinite(o.hb)){const old=Math.floor(o.rk)||0;o.hb=old>=5?10:old>=4?5:1;o.mb=o.merit;}
-  o.rk=clamp(Math.floor(o.rk),0,RANKS.length-1);o.hb=clamp(Math.floor(o.hb),1,o.rk>=RANKS.length-1?HB_TOP:HB_MAX);if(typeof o.mb!=='number'||!isFinite(o.mb)||o.mb>o.merit)o.mb=o.merit;o.rep=clamp(Math.round(o.rep),0,100);o.clock=clamp(o.clock,0,SHIFT);
+  o.rk=clamp(Math.floor(o.rk),0,RANKS.length-1);o.hb=clamp(Math.floor(o.hb),1,o.rk>=RANKS.length-1?HB_TOP:hbMax(o.rk));if(typeof o.mb!=='number'||!isFinite(o.mb)||o.mb>o.merit)o.mb=o.merit;o.rep=clamp(Math.round(o.rep),0,100);o.clock=clamp(o.clock,0,SHIFT);
   const m=o.meta;if(!m||!BOSS[m.boss]||!LUCK.some(l=>l[0]===m.luck)||typeof m.wd!=='number'||!WX.some(x=>x[0]===m.wx))o.meta=null;
   if(o.sex!=='f')o.sex='m';o.rest=!!o.rest;
   o.ach=Array.isArray(o.ach)?o.ach.filter(k=>ACH.some(a=>a.id===k)):[];if(!o.ach.includes(o.title))o.title=o.ach[0]||'';
@@ -2199,13 +2203,13 @@ function addMerit(x){
   x=Math.round(x*lifeMerit());S.merit+=x;checkRank();
 }
 /* 호봉은 공적만 채우면 오르고, 5호봉에서 다음 계급은 표창·평판까지 채워야 한다 */
-const promoReady=()=>S.rk<RANKS.length-1&&S.hb>=HB_MAX&&S.merit-S.mb>=hbNeed()&&S.commend>=promoC()&&S.rep>=PROMO[S.rk].r;
+const promoReady=()=>S.rk<RANKS.length-1&&S.hb>=hbMax(S.rk)&&S.merit-S.mb>=hbNeed()&&S.commend>=promoC()&&S.rep>=PROMO[S.rk].r;
 function checkRank(){
   let n=0;
   while(n++<40){
-    const cap=S.rk>=RANKS.length-1?HB_TOP:HB_MAX;
+    const cap=S.rk>=RANKS.length-1?HB_TOP:hbMax(S.rk);
     if(S.hb<cap&&S.merit-S.mb>=hbNeed()){S.mb+=hbNeed();S.hb++;SFX.play('up');log(rankLabel()+'이 됐습니다 (근무 수당 +6%)','up');toast(rankLabel()+' 승급','up');
-      if(S.hb===HB_MAX&&S.rk<RANKS.length-1){const q=PROMO[S.rk];log(RANKS[S.rk+1]+' 진급 심사 대상입니다. 표창 '+promoC()+'개, 평판 '+q.r+' 이상, 공적 '+fmt(hbNeed())+'을 채우세요','up');}
+      if(S.hb===hbMax(S.rk)&&S.rk<RANKS.length-1){const q=PROMO[S.rk];log(RANKS[S.rk+1]+' 진급 심사 대상입니다. 표창 '+promoC()+'개, 평판 '+q.r+' 이상, 공적 '+fmt(hbNeed())+'을 채우세요','up');}
       continue;}
     if(promoReady()){S.rk++;S.hb=1;S.mb=S.merit;act('salute');SFX.play('fanfare');hist(RANKS[S.rk]+' 진급','up');log(RANKS[S.rk]+'(으)로 진급했습니다','up');toast(RANKS[S.rk]+' 진급을 명 받았습니다','up');dirty.rank=true;continue;}
     break;
@@ -2684,7 +2688,7 @@ function renderHud(){
   setText($('gold'),fmt(S.gold)+'원');
   setText($('rate'),'초당 +'+fmt(rate())+'원'+(weekend()?' · 주말 1.5배':''));
   if(lastRk!==S.rk*100+S.hb){lastRk=S.rk*100+S.hb;$('insignia').innerHTML=insignia(S.rk);$('rankName').textContent=rankLabel();dirty.rank=true;}
-  const need=hbNeed(),got=clamp(S.merit-S.mb,0,need),wait=S.rk<RANKS.length-1&&S.hb>=HB_MAX;
+  const need=hbNeed(),got=clamp(S.merit-S.mb,0,need),wait=S.rk<RANKS.length-1&&S.hb>=hbMax(S.rk);
   $('meritBar').style.width=(got/need*100)+'%';setText($('meritLab'),wait?'진급':'호봉');
   if(wait){const q=PROMO[S.rk];setText($('meritNum'),got<need?fmt(got)+'/'+fmt(need):'표창 '+Math.min(S.commend,promoC())+'/'+promoC()+' · 평판 '+Math.min(S.rep,q.r)+'/'+q.r);}
   else setText($('meritNum'),fmt(got)+'/'+fmt(need));
@@ -3112,7 +3116,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-143427';
+const VER='2026.11.16-151926';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
