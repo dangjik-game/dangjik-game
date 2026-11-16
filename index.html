@@ -2056,6 +2056,34 @@ function autoTick(){
 function autoPaint(){const b=$('autoBtn');if(!b||!S)return;const a=autoFix(),live=a.d===S.day;
   b.classList.toggle('on',live&&a.on);b.textContent=live?(a.on?'자동\nON':'자동\n멈춤'):'자동\n근무';}
 setTimeout(()=>{const b=$('autoBtn');if(b)b.addEventListener('click',()=>{autoBtnTap();});setInterval(()=>{if(S){autoTick();autoPaint();}},400);},0);
+
+/* ── 코인 상장폐지: 별똥코인 자리는 가끔 '투자 유의'를 거쳐 상장폐지되고, 그러면 가진 코인은 0원이 된다.
+   대신 바로 새 이름의 코인이 상장된다. 저장: S.mk.coin={nm,b,warn,gen} ── */
+const COIN_NM=['별똥','달토끼','번개','도토리','은하수','구름빵','블랙홀','무지개','솜사탕','고구마','반딧불','해파리','꼬꼬닭','눈사람','쿼카','두더지'];
+function coinSync(){
+  if(!S||!S.mk)return;const k=STK.find(x=>x.id==='bt');if(!k)return;
+  if(!S.mk.coin||typeof S.mk.coin!=='object')S.mk.coin={nm:'별똥코인',b:k.b,warn:0,gen:1};
+  const c=S.mk.coin;k.n=c.nm;k.b=c.b;k.t='코인 · 초고위험 · 상장폐지 위험'+(c.warn>0?' · ⚠ 투자 유의 종목':'');
+}
+function coinTick(quiet){
+  coinSync();const c=S.mk.coin,k=STK.find(x=>x.id==='bt'),o=S.mk.own.bt,held=o&&o.n>0;
+  if(c.warn>0){c.warn--;S.mk.p.bt=Math.max(1,Math.round(S.mk.p.bt*(1+(R()-.6)*.25)));
+    if(c.warn===0){
+      if(R()<.6){/* 상장폐지 */
+        const lost=held?Math.round(o.cost):0,old=c.nm;
+        if(held){S.stats.stockGain=(S.stats.stockGain||0)-lost;hist(old+' 상장폐지 · 투자금 '+fmt(lost)+'원 손실','bad');}
+        S.mk.own.bt={n:0,cost:0};
+        let nm;do{nm=COIN_NM[Math.floor(R()*COIN_NM.length)]+'코인';}while(nm===old);
+        const b=Math.round((3000+R()*60000)/100)*100;S.mk.coin={nm,b,warn:0,gen:(c.gen||1)+1};S.mk.p.bt=b;S.mk.h.bt=[b];coinSync();
+        S.mk.news=old+' 상장폐지 · '+nm+' 신규 상장 ▲';
+        if(!quiet){if(held){SFX.play('down');popOpen('<h3 class="pop-t">상장폐지</h3><p class="pop-l">'+esc(old)+'이(가) 거래소에서 상장폐지됐습니다. 가지고 있던 코인은 모두 휴지 조각이 됐습니다.</p><p class="pop-g" style="color:#ff7a6e">-'+fmt(lost)+'원</p><p class="pop-n">새 코인 「'+esc(nm)+'」이(가) 상장됐습니다.</p>',[{t:'...'}]);}
+          else toast('코인 소식: '+S.mk.news,'up');}
+        return;}
+      S.mk.p.bt=Math.round(S.mk.p.bt*1.3);S.mk.news=c.nm+' 투자 유의 해제 ▲';if(!quiet&&held)toast('코인 소식: '+S.mk.news,'up');coinSync();return;}
+    coinSync();return;}
+  if(R()<.0012){c.warn=6;S.mk.p.bt=Math.max(1,Math.round(S.mk.p.bt*.6));S.mk.news=c.nm+' 투자 유의 종목 지정 ▼ (상장폐지 위험)';coinSync();
+    if(!quiet&&held){SFX.play('down');toast('⚠ '+S.mk.news,'');}}
+}
 /* ───── 휴가 · 연애 · 결혼 ─────
    S.vac = {next:다음 근무 보너스%, buff:이번 근무 보너스%, cd:다음 휴가 가능 일차}
    S.lv  = {st:0 없음·1 썸·2 연인·3 약혼·4 부부, nm:이름, aff:호감도 0~100, dates:데이트 수}
@@ -2943,6 +2971,7 @@ function renderAch(){
 function gauss(){let u=0,v=0;while(!u)u=R();while(!v)v=R();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
 function mkInit(){
   if(!S.mk)S.mk={p:{},h:{},own:{},news:'',acc:0};
+  try{coinSync();}catch(e){}
   STK.forEach(k=>{if(!(S.mk.p[k.id]>0))S.mk.p[k.id]=k.b;if(!Array.isArray(S.mk.h[k.id])||!S.mk.h[k.id].length)S.mk.h[k.id]=[S.mk.p[k.id]];
     const o=S.mk.own[k.id];if(!o||typeof o.n!=='number'||typeof o.cost!=='number')S.mk.own[k.id]={n:0,cost:0};});
   if(typeof S.mk.acc!=='number')S.mk.acc=0;if(typeof S.mk.news!=='string')S.mk.news='';
@@ -2951,6 +2980,7 @@ function stockTick(quiet){
   STK.forEach(k=>{const p=S.mk.p[k.id];S.mk.p[k.id]=p*Math.exp(.02*Math.log(k.b/p)-k.s*k.s/2+.001+k.s*gauss());});
   if(R()<.12){const k=pick(STK),up=R()<.5,f=.1+R()*.2;S.mk.p[k.id]*=up?1+f:1-f;
     S.mk.news=pick(up?NEWS_UP:NEWS_DN).replace('{n}',k.n)+(up?' ▲':' ▼');if(!quiet&&S.mk.own[k.id].n>0){toast('주식 소식: '+S.mk.news,up?'up':'');SFX.play(up?'up':'down');}}
+  try{coinTick(quiet);}catch(e){}
   STK.forEach(k=>{const p=Math.max(Math.round(k.b*.05),Math.round(S.mk.p[k.id]));S.mk.p[k.id]=p;const h=S.mk.h[k.id];h.push(p);if(h.length>24)h.shift();});
   dirty.shop=true;
 }
@@ -3556,7 +3586,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-201552';
+const VER='2026.11.16-204122';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
