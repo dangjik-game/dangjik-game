@@ -935,7 +935,8 @@ const BOSS={
   kind:{n:'호인 사령',who:'나호인 중위',pref:'idea',d:'실수해도 벌점을 1점 깎아 줍니다.'},
   strict:{n:'깐깐한 사령',who:'고깐깐 소령',pref:'short',d:'놓친 임무 감점이 2배, 잘한 일의 공적은 1.3배입니다.'},
   sleepy:{n:'잠 많은 사령',who:'장졸음 대위',pref:'short',d:'꼼수가 덜 걸리지만, 깨우면 역효과가 납니다.'},
-  zeal:{n:'열정 사령',who:'한열정 중위',pref:'idea',d:'상황이 하나 더 생기고 임무 공적이 1.2배입니다.'}
+  zeal:{n:'열정 사령',who:'한열정 중위',pref:'idea',d:'상황이 하나 더 생기고 임무 공적이 1.2배입니다.'},
+  angry:{n:'버럭 사령',who:'노발대 소령',pref:'none',d:'무엇을 해도 혼냅니다. 억울한 상황이 자주 생기지만, 버티면 임무 공적이 1.3배입니다.'}
 };
 const LUCK=[['대길',.10,10],['길',.05,25],['평',0,45],['흉',-.07,20]];
 /* 임무를 수행하는 장소와, 끝까지 꼼꼼히 할 때 걸리는 시간(초) */
@@ -1000,20 +1001,20 @@ const TL=[0,4,10,18,28,40];
 const PERK=['보고 보상이 단계마다 8%씩 오릅니다','건의가 더 잘 통합니다','그날 첫 벌점 1점을 봐줍니다','표창 추천 확률이 두 배가 됩니다','함께하는 날 근무 수당 +10%'];
 const REPS={short:'결론만 간결하게 보고한다',full:'확인한 내용을 순서대로 자세히 보고한다',idea:'결과와 함께 개선할 점을 건의한다'};
 const REPN={short:'간결한 보고',full:'자세한 보고',idea:'건의를 곁들인 보고'};
-const BOSS_MISS={fm:'요점만 있고 근거가 없군. 다음엔 자세히 보고해.',kind:'고생했어. 다음엔 자네 생각도 들려줘.',strict:'길어. 결론부터 말해.',sleepy:'어… 길다… 짧게…',zeal:'좋아, 그런데 개선할 점은 없었나?'};
+const BOSS_MISS={fm:'요점만 있고 근거가 없군. 다음엔 자세히 보고해.',kind:'고생했어. 다음엔 자네 생각도 들려줘.',strict:'길어. 결론부터 말해.',sleepy:'어… 길다… 짧게…',zeal:'좋아, 그런데 개선할 점은 없었나?',angry:'그게 보고야? 내가 원하는 게 뭔지 몰라?'};
 const SAY={
-  start:{fm:'오늘도 절차대로 가지.',kind:'오늘도 잘 부탁해.',strict:'오늘은 실수 없이 하자.',sleepy:'조용한 밤이면 좋겠군.',zeal:'오늘 밤도 힘차게!'},
-  miss:{fm:'그 임무, 시간 넘겼어.',kind:'바빴지? 다음엔 챙겨 줘.',strict:'부관, 그거 놓쳤어.',sleepy:'…뭐 놓친 거 없나?',zeal:'놓쳤잖아! 속도를 내!'},
-  good:{fm:'꼼꼼하군. 좋아.',kind:'잘하네, 고마워.',strict:'그 정도는 해야지.',sleepy:'음… 믿음직해.',zeal:'바로 그거야!'},
-  slip:{fm:'서두르면 틀려.',kind:'괜찮아, 천천히 해.',strict:'대충 하지 마.',sleepy:'…방금 뭐였지?',zeal:'빠른 건 좋은데 정확하게!'},
-  inc:{fm:'상황이다. 절차대로.',kind:'침착하게 하면 돼.',strict:'상황이야. 정신 차려.',sleepy:'어… 무슨 일이야?',zeal:'상황 발생! 움직여!'},
-  night:{fm:'새벽이 제일 위험해.',kind:'졸리면 커피 한 잔 해.',strict:'졸지 마.',sleepy:'쿨… 아, 안 잤어.',zeal:'새벽 공기가 좋군!'},
-  call:{fm:'부관, 잠깐.',kind:'부관, 잠깐 와 볼래?',strict:'부관. 이리 와.',sleepy:'부관… 좀 와 봐.',zeal:'부관! 이리 와 봐!'}
+  start:{fm:'오늘도 절차대로 가지.',kind:'오늘도 잘 부탁해.',strict:'오늘은 실수 없이 하자.',sleepy:'조용한 밤이면 좋겠군.',zeal:'오늘 밤도 힘차게!',angry:'오늘 하나라도 틀리면 각오해.'},
+  miss:{fm:'그 임무, 시간 넘겼어.',kind:'바빴지? 다음엔 챙겨 줘.',strict:'부관, 그거 놓쳤어.',sleepy:'…뭐 놓친 거 없나?',zeal:'놓쳤잖아! 속도를 내!',angry:'이것도 놓쳐? 정신을 어디 두고 다녀!'},
+  good:{fm:'꼼꼼하군. 좋아.',kind:'잘하네, 고마워.',strict:'그 정도는 해야지.',sleepy:'음… 믿음직해.',zeal:'바로 그거야!',angry:'…이게 당연한 거야. 칭찬 기대하지 마.'},
+  slip:{fm:'서두르면 틀려.',kind:'괜찮아, 천천히 해.',strict:'대충 하지 마.',sleepy:'…방금 뭐였지?',zeal:'빠른 건 좋은데 정확하게!',angry:'대충 할 거면 하지를 마!'},
+  inc:{fm:'상황이다. 절차대로.',kind:'침착하게 하면 돼.',strict:'상황이야. 정신 차려.',sleepy:'어… 무슨 일이야?',zeal:'상황 발생! 움직여!',angry:'또 사고야? 네 근무엔 왜 이렇게 일이 많아!'},
+  night:{fm:'새벽이 제일 위험해.',kind:'졸리면 커피 한 잔 해.',strict:'졸지 마.',sleepy:'쿨… 아, 안 잤어.',zeal:'새벽 공기가 좋군!',angry:'졸기만 해 봐.'},
+  call:{fm:'부관, 잠깐.',kind:'부관, 잠깐 와 볼래?',strict:'부관. 이리 와.',sleepy:'부관… 좀 와 봐.',zeal:'부관! 이리 와 봐!',angry:'부관!! 당장 이리 와!'}
 };
-const BOSS_HI={fm:'부관.',kind:'부관, 고생 많지?',strict:'부관, 이리 와 봐.',sleepy:'(졸린 눈으로) 어… 부관.',zeal:'부관! 마침 잘 왔어.'};
-const BOSS_OK={fm:'절차대로 잘했네.',kind:'고생했어. 좀 쉬어.',strict:'음. 이번엔 지적할 게 없군.',sleepy:'어… 그래, 수고했어.',zeal:'좋아! 다음 것도 부탁해.'};
-const BOSS_SO={fm:'다음엔 순서대로 꼼꼼히 해.',kind:'괜찮아. 다음엔 조금만 더 봐 줘.',strict:'대충 한 티가 나. 다음엔 제대로 해.',sleepy:'어… 됐어, 그 정도면.',zeal:'속도는 좋은데 좀 더 꼼꼼하게!'};
-const BOSS_TALK={fm:'이상 없지? 절차대로만 해.',kind:'힘들면 말해.',strict:'자리 비우지 말고.',sleepy:'…쿨.',zeal:'뭐 할 일 없나 찾아봐!'};
+const BOSS_HI={fm:'부관.',kind:'부관, 고생 많지?',strict:'부관, 이리 와 봐.',sleepy:'(졸린 눈으로) 어… 부관.',zeal:'부관! 마침 잘 왔어.',angry:'(한숨) …왜.'};
+const BOSS_OK={fm:'절차대로 잘했네.',kind:'고생했어. 좀 쉬어.',strict:'음. 이번엔 지적할 게 없군.',sleepy:'어… 그래, 수고했어.',zeal:'좋아! 다음 것도 부탁해.',angry:'이번엔 넘어가지. 다음에도 이러면 가만 안 둬.'};
+const BOSS_SO={fm:'다음엔 순서대로 꼼꼼히 해.',kind:'괜찮아. 다음엔 조금만 더 봐 줘.',strict:'대충 한 티가 나. 다음엔 제대로 해.',sleepy:'어… 됐어, 그 정도면.',zeal:'속도는 좋은데 좀 더 꼼꼼하게!',angry:'이걸 보고라고 하는 거야? 다시 생각해 와!'};
+const BOSS_TALK={fm:'이상 없지? 절차대로만 해.',kind:'힘들면 말해.',strict:'자리 비우지 말고.',sleepy:'…쿨.',zeal:'뭐 할 일 없나 찾아봐!',angry:'할 일 없어 보이는데? 현황판이나 다시 봐!'};
 const UPS=[
   {k:'fit',n:'체력 단련',d:'초당 근무 수당',v:l=>'+'+(15*l)+'%',base:300,g:1.55,max:30},
   {k:'adm',n:'행정 숙달',d:'임무 보상 골드·공적',v:l=>'+'+(10*l)+'%',base:350,g:1.55,max:30},
@@ -1057,7 +1058,7 @@ const ACH=[
   {id:'gS',n:'완벽한 밤',d:'근무 평가 S를 받는다',t:'완벽주의자',g:15000,ok:s=>(s.stats.sGrades||0)>=1},
   {id:'q20',n:'사령의 오른팔',d:'사령 지시를 20건 완수한다',t:'사령의 오른팔',g:40000,ok:s=>(s.stats.quests||0)>=20},
   {id:'tr5',n:'두터운 신임',d:'사령 한 명의 신임을 5단계로 올린다',t:'믿고 맡기는 부관',g:60000,ok:s=>Object.keys(s.bi).some(k=>s.bi[k].t>=TL[5])},
-  {id:'trA',n:'모두의 부관',d:'사령 다섯 명 모두의 신임을 3단계로 올린다',t:'모두의 부관',g:150000,ok:s=>Object.keys(BOSS).every(k=>s.bi[k]&&s.bi[k].t>=TL[3])},
+  {id:'trA',n:'모두의 부관',d:'사령 여섯 명 모두의 신임을 3단계로 올린다',t:'모두의 부관',g:150000,ok:s=>Object.keys(BOSS).every(k=>s.bi[k]&&s.bi[k].t>=TL[3])},
   {id:'aw5',n:'표창 수집가',d:'포상을 5번 받는다',t:'표창 수집가',g:50000,ok:s=>s.stats.awards>=5},
   {id:'clean',n:'무사고 근무',d:'징계 없이 근무를 10회 마친다',t:'무사고 부관',g:50000,ok:s=>s.stats.shifts>=10&&s.stats.discs===0},
   {id:'boar',n:'멧돼지 조련사',d:'멧돼지를 3번 쫓아낸다',t:'멧돼지 조련사',g:20000,ok:s=>(s.stats.boar||0)>=3},
@@ -2141,9 +2142,10 @@ function rollDay(){
 }
 function pickIncident(){
   const wx=S.meta.wx;
-  let pool=INC.filter(x=>!x.chain&&(!x.req||x.req.includes(wx))&&!S.recent.includes(x.id));
+  let pool=INC.filter(x=>!x.chain&&(!x.req||x.req.includes(wx))&&!S.recent.includes(x.id));const ang=S.meta.boss==='angry';
   if(!pool.length)pool=INC.filter(x=>!x.chain&&(!x.req||x.req.includes(wx)));
-  const inc=wpick(pool.map(x=>[x,(x.req?6:1)*(x.wx&&x.wx.includes(wx)?4:1)]))[0];
+  /* 억울하게 혼나는 상황은 버럭 사령 근무 때 유독 많이 나온다 */
+  const inc=wpick(pool.map(x=>[x,(x.req?6:1)*(x.wx&&x.wx.includes(wx)?4:1)*(x.hard?(ang?7:.15):1)]))[0];
   S.recent.unshift(inc.id);if(S.recent.length>12)S.recent.length=12;
   return inc;
 }
@@ -2238,7 +2240,7 @@ function checkCommittee(){
 function reward(t,share,careful){
   const adm=1+.1*S.up.adm;const c=careful?1.3:1;
   const g=Math.round(rate()*60*adm*c*share);
-  const m=Math.max(1,Math.round(3*MULT[S.rk]*adm*c*share*(S.meta.boss==='zeal'?1.2:1)));
+  const m=Math.max(1,Math.round(3*MULT[S.rk]*adm*c*share*(S.meta.boss==='zeal'?1.2:S.meta.boss==='angry'?1.3:1)));
   S.gold+=g;addMerit(m);return {g,m};
 }
 function removeTask(u){const i=S.tasks.findIndex(t=>t.u===u);if(i>=0)S.tasks.splice(i,1);dirty.tasks=true;}
@@ -2257,13 +2259,13 @@ function completeTask(t,full){
       setTimeout(()=>{if(S&&$('scrim').hidden&&!mgOpen&&S.tasks.some(x=>x.u===it.u))openIncident(it.u);},700);}
     cloudDirty=true;return;
   }
-  if(!full&&R()<Math.max(.08,.25-.02*S.up.judge)){quickSlip(t);}
+  if(!full&&R()<Math.max(.08,.25-.02*S.up.judge)+(S.meta.boss==='angry'?.15:0)){quickSlip(t);}
   else{const r=reward(t,1,full);S.shift.done++;S.stats.done++;act('done');SFX.play(full?'chime':'stamp');if(full&&R()<.25)say('good');log(taskName(t)+(full?' 꼼꼼히 완료':' 완료')+' (골드 +'+fmt(r.g)+', 공적 +'+r.m+')','good');}
   cloudDirty=true;
 }
 /* 빨리 끝내기 실수: 다시 하거나, 사령에게 걸리거나, 그냥 실수로 남는다 */
 function quickSlip(t){
-  act('slump');say('slip');SFX.play('slip');S.shift.missed++;const x=R(),nm=taskName(t);
+  act('slump');say('slip');SFX.play('slip');S.shift.missed++;const x=S.meta.boss==='angry'?.45+R()*.4:R(),nm=taskName(t);
   if(x<.45){S.rep=clamp(S.rep-2,0,100);
     if(S.clock<SHIFT-50){S.tasks.push(Object.assign({},t,{u:S.seq++,at:S.clock,due:S.clock+45,redo:1}));dirty.tasks=true;}
     log(nm+': 서두르다 빠뜨린 게 있습니다. 다시 해야 합니다 (평판 -2)','bad');toast('빠뜨린 게 있습니다. '+STN[stationOf(t)]+'에서 다시 하세요');}
@@ -2322,7 +2324,7 @@ function openQuest(t){
     if(x.dataset.close){closeSheet();return;}
     const a=x.dataset.a;if(!a)return;
     removeTask(t.u);let due=S.clock+(t.urg?45:70)+(t.urg?40:60)*q.steps.length,cut=false,msg='';
-    if(a==='later'){due+=60;if(b==='strict'||b==='zeal'){S.rep=clamp(S.rep-1,0,100);msg='“지금 하라니까. 뭐, 끝나는 대로 와.” (평판 -1)';}else msg='“그래, 하던 것부터 마무리해.”';}
+    if(a==='later'){due+=60;if(b==='angry'){S.rep=clamp(S.rep-3,0,100);msg='“지금 당장 하라고!! 이따가? 너 지금 장난해?” (평판 -3)';}else if(b==='strict'||b==='zeal'){S.rep=clamp(S.rep-1,0,100);msg='“지금 하라니까. 뭐, 끝나는 대로 와.” (평판 -1)';}else msg='“그래, 하던 것부터 마무리해.”';}
     else if(a==='idea'){
       const p=clamp(.35+.08*blv()+(blv()>=2?.1:0)+(S.rep-50)*.004+(b==='kind'||b==='zeal'?.15:b==='strict'?-.1:b==='fm'?-.05:0),.1,.92);
       if(R()<p){cut=true;trust(1);msg='“좋은 생각이군. 그렇게 해.” (마지막 단계 생략, 신임 상승)';}
@@ -2348,7 +2350,7 @@ function openReport(t){
 }
 function doReport(t,mode){
   removeTask(t.u);const b=S.meta.boss,o=bi(),cf=t.cf!==false,mult=MULT[S.rk],hit=BOSS[b].pref===mode,lv=blv();
-  const er=R(),ev=t.inc||t.fu?null:cf&&er<.13?'praise':er<.28?'recheck':er<.36?'snack':er<.42?'brag':null;
+  const er=R(),ev=t.inc||t.fu?null:b==='angry'?(er<.5?'recheck':null):cf&&er<.13?'praise':er<.28?'recheck':er<.36?'snack':er<.42?'brag':null;
   const k=(cf?1.3:1)*(hit?1.25:1)*(t.urg?1.6:1)*(1+.08*lv)*(ev==='praise'?1.5:ev==='recheck'?.6:1);
   let m=Math.round((t.inc?22:14)*mult*k*(b==='strict'&&cf?1.3:1)*(b==='zeal'?1.2:1));const before=S.merit;addMerit(m);m=S.merit-before;
   const g=Math.round(rate()*90*k*(ev==='snack'?1.8:1));S.gold+=g;const rb=S.rep;S.rep=clamp(S.rep+(cf?3:1),0,100);
@@ -2378,7 +2380,7 @@ function doReport(t,mode){
 const variant=x=>Array.isArray(x)?wpick(x)[0]:x;
 /* 사령 지시 하나에 한 번까지, 같은 근무에 같은 상황은 다시 안 나온다 */
 function pickTwist(st){
-  const b=S.meta.boss,p=b==='zeal'?.5:b==='sleepy'?.25:.4;if(R()>=p)return null;
+  const b=S.meta.boss,p=b==='zeal'||b==='angry'?.5:b==='sleepy'?.25:.4;if(R()>=p)return null;
   const pool=TWIST.filter(x=>x.qt.includes(st)&&!S.recent.includes(x.id));if(!pool.length)return null;
   const x=pick(pool);S.recent.unshift(x.id);if(S.recent.length>12)S.recent.length=12;return x;
 }
@@ -2722,7 +2724,7 @@ function renderRec(){
   $('stats').innerHTML=[['근무 횟수',s.shifts],['수행 임무',s.done],['겪은 상황',s.inc],['포상',s.awards],['징계',s.discs],['사령 지시',s.quests||0]].map(x=>'<div><small>'+x[0]+'</small><b>'+fmt(x[1])+'</b></div>').join('');
   renderAch();
   $('bossList').innerHTML=BT.map(k=>{const o=S.bi[k],lv=lvOf(o.t),top=lv>=TL.length-1,lo=TL[lv],hi=top?lo:TL[lv+1];
-    return '<div class="row brow"><b>'+esc(BOSS[k].who)+' <span class="num">신임 '+lv+'단계</span></b><p>'+esc(BOSS[k].n)+' · 좋아하는 보고: '+(o.k?REPN[BOSS[k].pref]:'아직 모름')+'</p>'+
+    return '<div class="row brow"><b>'+esc(BOSS[k].who)+' <span class="num">신임 '+lv+'단계</span></b><p>'+esc(BOSS[k].n)+' · 좋아하는 보고: '+(o.k?(REPN[BOSS[k].pref]||'없음. 무엇을 해도 혼냄'):'아직 모름')+'</p>'+
       '<div class="bar"><i style="width:'+(top?100:Math.round((o.t-lo)/(hi-lo)*100))+'%"></i></div><p>'+(top?'모든 혜택을 받고 있습니다.':'다음 혜택: '+PERK[lv])+'</p></div>';}).join('');
   $('hist').innerHTML=S.hist.slice(0,20).map(h=>'<li><span class="d">'+h.d+'일차</span><span class="'+h.c+'">'+esc(h.x)+'</span></li>').join('')||'<li><span class="d"></span><span>아직 기록이 없습니다.</span></li>';
   $('log').innerHTML=S.log.slice(0,20).map(l=>'<li><time>'+l.t+'</time><span class="'+l.c+'">'+esc(l.x)+'</span></li>').join('')||'<li><time></time><span>아직 기록이 없습니다.</span></li>';
@@ -3038,7 +3040,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-102905';
+const VER='2026.11.16-103052';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
