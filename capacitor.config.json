@@ -1,0 +1,7 @@
+{
+  "appId": "com.dangjikgame.app",
+  "appName": "당직부관 키우기",
+  "webDir": "www",
+  "android": { "backgroundColor": "#1b211c" },
+  "server": { "androidScheme": "https" }
+}
