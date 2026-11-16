@@ -1701,7 +1701,14 @@ const RE=[
  {id:'rview',n:'한강뷰 아파트',p:200000000,buy:1,live:50},
  {id:'mans',n:'단독 저택',p:300000000,buy:1,live:55},
  {id:'bldg',n:'꼬마 빌딩',p:500000000,buy:1,live:0,rentK:.008,d:'살 수는 없고 세만 놓을 수 있음'},
- {id:'mall',n:'상가 건물',p:1000000000,buy:1,live:0,rentK:.009,d:'살 수는 없고 세만 놓을 수 있음'}
+ {id:'mall',n:'상가 건물',p:1000000000,buy:1,live:0,rentK:.009,d:'살 수는 없고 세만 놓을 수 있음'},
+ {id:'gangnam',n:'강남 재건축 아파트',p:2000000000,buy:1,live:60},
+ {id:'cheongdam',n:'청담동 고급 빌라',p:4000000000,buy:1,live:65},
+ {id:'skypent',n:'초고층 펜트하우스',p:8000000000,buy:1,live:70},
+ {id:'seongbuk',n:'성북동 대저택',p:15000000000,buy:1,live:75},
+ {id:'office',n:'오피스 빌딩',p:30000000000,buy:1,live:0,rentK:.01,d:'살 수는 없고 세만 놓을 수 있음'},
+ {id:'resort',n:'제주 리조트',p:50000000000,buy:1,live:0,rentK:.011,d:'살 수는 없고 세만 놓을 수 있음'},
+ {id:'landmark',n:'랜드마크 타워',p:100000000000,buy:1,live:0,rentK:.012,d:'최종 목표 · 세만 놓을 수 있음'}
 ];
 /* 청약 당첨 확률: 낙첨될 때마다 가점이 쌓여 조금씩 오르지만 기본 확률의 2배를 넘지 않는다 */
 const lotP=h=>Math.min(h.lot*2,h.lot*(1+.1*lifeFix().re.pts));
@@ -1999,13 +2006,13 @@ function renderRankAlt(){
 }
 function moneyShort(v){return v>=1e8?(v/1e8).toFixed(v>=1e10?0:1).replace(/\.0$/,'')+'억원':v>=1e4?Math.round(v/1e4).toLocaleString('ko-KR')+'만원':fmt(v)+'원';}
 
-/* ── 자동 근무 1회권: 그날 근무 한 번 동안 잡무(정기·잡일)만 알아서 처리. 보상 70%.
+/* ── 자동 근무 1회권: 그날 근무 한 번 동안 모든 임무를 순간 이동·빠른 처리·성공 100%로. 보상 70%.
    살 수 있는 수는 제한 없음. 첫 장 50만원, 같은 날(한국 날짜) 살 때마다 두 배. 다음 날 50만원으로 돌아간다 ── */
 const AUTO_BASE=500000;
 const autoCost=()=>AUTO_BASE*Math.pow(2,Math.min(30,autoFix().used));
 function autoFix(){if(!S.auto||typeof S.auto!=='object')S.auto={d:0,on:false,day:'',used:0};const t=kstDay();if(S.auto.day!==t){S.auto.day=t;S.auto.used=0;}return S.auto;}
 const autoLive=()=>{if(!S)return false;const a=autoFix();return a.d===S.day&&a.on;};
-const autoOk=t=>(t.k==='r'||t.k==='m')&&!urgent(t);
+const autoOk=t=>t.k!=='c';
 function autoBtnTap(){
   if(!S||S.rest)return;const a=autoFix();
   if(a.d===S.day){a.on=!a.on;toast(a.on?'자동 근무를 다시 켰습니다':'자동 근무를 잠시 껐습니다');autoPaint();save();return;}
@@ -2017,14 +2024,30 @@ function autoBtnTap(){
       if(S.gold<c){toast('돈이 모자랍니다');return false;}
       S.gold-=c;a.d=S.day;a.on=true;a.used++;hist('자동 근무 1회권 사용 -'+fmt(c)+'원');save();autoPaint();SFX.play('coin');toast('자동 근무를 시작합니다');return false;}}]);
 }
-let autoGo=null;
+/* 자동 근무: 임무 위치로 바로 이동해 빠르게, 실패 없이 처리한다(보상 70%) */
+let autoBusy=0;
 function autoTick(){
-  if(!autoLive()||paused||S.rest||mgOpen||!$('scrim').hidden||tab!=='duty'||work)return;
-  const t=sorted().find(autoOk);if(!t){autoGo=null;return;}
-  const st=stationOf(t);
-  if(!V3){t.auto=1;completeTask(t,true);return;}
-  if(V3.near()===st&&taskAt(st)===t){autoGo=null;t.auto=1;beginTask(t);return;}
-  if(autoGo!==t.u){autoGo=t.u;V3.goTo(st);}
+  if(!autoLive()||paused||S.rest||mgOpen||work||Date.now()<autoBusy)return;
+  if(!$('scrim').hidden){/* 자동 근무 중 열린 결과 창은 바로 닫는다 */if(!openU)closeSheet();else return;}
+  if(tab!=='duty')return;
+  const t=sorted().find(autoOk);if(!t)return;
+  t.auto=1;autoBusy=Date.now()+900;
+  const b=S.meta.boss,st=stationOf(t);
+  if(t.k==='i'){/* 돌발 상황: 가장 확실한 선택을 하고 무조건 성공 */
+    const def=INC_BY[t.id];if(!def){removeTask(t.u);return;}
+    let bi=-1,bp=-1;def.c.forEach((c,i)=>{if(c.dis||c.run)return;const p=c.p==null?0:c.p;if(p>bp){bp=p;bi=i;}});
+    if(bi<0){bi=def.c.findIndex(c=>!c.dis);}
+    if(V3)V3.warp(st);openU=t.u;resolve(t,def,bi,true);closeSheet();toast('[자동] '+def.t+' 처리 완료','up');return;}
+  if(t.k==='q'){/* 사령 지시: 바로 수락 */
+    const q=QUEST[t.qi];if(V3)V3.warp('boss');removeTask(t.u);
+    const due=S.clock+(t.urg?45:70)+(t.urg?40:60)*q.steps.length;
+    S.tasks.push({u:S.seq++,k:'qs',qi:t.qi,step:0,cf:true,urg:!!t.urg,fu:!!t.fu,cut:false,at:S.clock,due,auto:1});
+    log('[자동] 당직사령 지시를 받았습니다: '+q.steps[0][1],'up');act('salute');cloudDirty=true;return;}
+  if(t.k==='qr'){/* 결과 보고: 사령이 좋아하는 방식으로 */
+    if(V3)V3.warp('boss');openU=t.u;doReport(t,BOSS[b].pref&&REPS[BOSS[b].pref]?BOSS[b].pref:Object.keys(REPS)[0]);closeSheet();toast('[자동] 당직사령에게 보고했습니다','up');return;}
+  /* 정기 업무 · 잡일 · 지시 단계: 그 자리로 이동해 0.8초 만에 꼼꼼히 처리 */
+  if(!V3){completeTask(t,true);return;}
+  V3.warp(st);const now=Date.now();setWork({u:t.u,st,start:now,end:now+800,name:taskName(t)});
 }
 function autoPaint(){const b=$('autoBtn');if(!b||!S)return;const a=autoFix(),live=a.d===S.day;
   b.classList.toggle('on',live&&a.on);b.textContent=live?(a.on?'자동\nON':'자동\n멈춤'):'자동\n근무';}
@@ -2640,7 +2663,7 @@ function completeTask(t,full){
     if(!last){nx.step=t.step+1;S.tasks.push(nx);log(taskName(t)+' 완료. 다음: '+q.steps[nx.step][1],'good');}
     else{nx.k='qr';S.tasks.push(nx);log(taskName(t)+' 완료. 당직사령에게 보고하세요','good');}
     if(tw){const it={u:S.seq++,k:'i',id:tw.id,at:S.clock,due:S.clock+80};S.tasks.push(it);dirty.tasks=true;log('지시를 하다가 뜻밖의 상황: '+tw.t,'bad');SFX.play('ring');
-      setTimeout(()=>{if(S&&$('scrim').hidden&&!mgOpen&&S.tasks.some(x=>x.u===it.u))openIncident(it.u);},700);}
+      setTimeout(()=>{if(S&&$('scrim').hidden&&!mgOpen&&!autoLive()&&S.tasks.some(x=>x.u===it.u))openIncident(it.u);},700);}
     cloudDirty=true;return;
   }
   if(!full&&R()<Math.max(.08,.25-.02*S.up.judge)+(S.meta.boss==='angry'?.15:0)){quickSlip(t);}
@@ -2735,19 +2758,20 @@ function openReport(t){
 function doReport(t,mode){
   removeTask(t.u);const b=S.meta.boss,o=bi(),cf=t.cf!==false,mult=MULT[S.rk],hit=BOSS[b].pref===mode,lv=blv();
   const er=R(),ev=t.inc||t.fu?null:b==='angry'?(er<.5?'recheck':null):cf&&er<.13?'praise':er<.28?'recheck':er<.36?'snack':er<.42?'brag':null;
-  const k=(cf?1.3:1)*(hit?1.25:1)*(t.urg?1.6:1)*(1+.08*lv)*(ev==='praise'?1.5:ev==='recheck'?.6:1);
+  const ev2=t.auto&&ev==='recheck'?null:ev;
+  const k=(cf?1.3:1)*(hit?1.25:1)*(t.urg?1.6:1)*(1+.08*lv)*(ev2==='praise'?1.5:ev2==='recheck'?.6:1)*(t.auto?.7:1);
   let m=Math.round((t.inc?22:14)*mult*k*(b==='strict'&&cf?1.3:1)*(b==='zeal'?1.2:1));const before=S.merit;addMerit(m);m=S.merit-before;
-  const g=Math.round(rate()*90*k*(ev==='snack'?1.8:1));S.gold+=g;const rb=S.rep;S.rep=clamp(S.rep+(cf?3:1),0,100);
+  const g=Math.round(rate()*90*k*(ev2==='snack'?1.8:1));S.gold+=g;const rb=S.rep;S.rep=clamp(S.rep+(cf?3:1),0,100);
   S.stats.quests=(S.stats.quests||0)+1;if(t.inc)S.stats.fuDone=(S.stats.fuDone||0)+1;
   const out=[{x:'공적 +'+fmt(m),c:'up'},{x:'돈 +'+fmt(g)+'원',c:'up'}];if(S.rep-rb)out.push({x:'평판 +'+(S.rep-rb),c:'up'});
   const tg=1+(cf?1:0)+(hit?1:0)+(t.fu?1:0);trust(tg);out.push({x:'신임 +'+tg,c:'up'});
   if(hit&&!o.k){o.k=true;out.push({x:'선호 파악: '+REPN[mode],c:'up'});}
   let tone='good',stamp=hit&&cf?'우수':cf?'수고':'보통',evLine='';
-  if(ev==='praise'){trust(1);out.push({x:'상급부대 칭찬 (보상 1.5배)',c:'up'});stamp='칭찬';tone='award';evLine='방금 상급부대에서 이 건으로 칭찬 전화가 왔어. 잘했다!';hist(BOSS[b].who+' 지시 건으로 상급부대 칭찬','good');}
-  else if(ev==='recheck'){const qs=qsteps(t),st=qs[Math.floor(R()*qs.length)][0];S.tasks.push({u:S.seq++,k:'qs',qi:-1,sp:[[st,STN[st]+' 다시 확인']],title:'보완 지시',norep:true,step:0,cf:true,at:S.clock,due:S.clock+70});dirty.tasks=true;
+  if(ev2==='praise'){trust(1);out.push({x:'상급부대 칭찬 (보상 1.5배)',c:'up'});stamp='칭찬';tone='award';evLine='방금 상급부대에서 이 건으로 칭찬 전화가 왔어. 잘했다!';hist(BOSS[b].who+' 지시 건으로 상급부대 칭찬','good');}
+  else if(ev2==='recheck'){const qs=qsteps(t),st=qs[Math.floor(R()*qs.length)][0];S.tasks.push({u:S.seq++,k:'qs',qi:-1,sp:[[st,STN[st]+' 다시 확인']],title:'보완 지시',norep:true,step:0,cf:true,at:S.clock,due:S.clock+70});dirty.tasks=true;
     out.push({x:'보완 지시: '+STN[st]+' 다시 확인',c:'down'});stamp='보완';evLine='수고했는데, 하나가 빠졌어. '+STN[st]+' 쪽 한 번만 다시 보고 와.';}
-  else if(ev==='snack'){out.push({x:'사령이 간식을 사 줌 (용돈 1.8배)',c:'up'});evLine='어? 내가 이걸 시켰었나… 아무튼 고생했어. 이거 먹고 해.';}
-  else if(ev==='brag'){trust(1);out.push({x:'사령이 옆 부대에 자랑 (신임 +1)',c:'up'});evLine='옆 부대 당직사령한테 자네 얘기 좀 했어. 일 잘한다고.';}
+  else if(ev2==='snack'){out.push({x:'사령이 간식을 사 줌 (용돈 1.8배)',c:'up'});evLine='어? 내가 이걸 시켰었나… 아무튼 고생했어. 이거 먹고 해.';}
+  else if(ev2==='brag'){trust(1);out.push({x:'사령이 옆 부대에 자랑 (신임 +1)',c:'up'});evLine='옆 부대 당직사령한테 자네 얘기 좀 했어. 일 잘한다고.';}
   if(cf&&R()<(lv>=4?.16:.08)){S.commend++;S.stats.awards++;const am=Math.round(20*mult);addMerit(am);out.push({x:'표창 +1 (공적 +'+fmt(am)+')',c:'up'});hist(BOSS[b].who+' 추천 표창','good');tone='award';stamp='포상';}
   const line=evLine||(!cf?BOSS_SO[b]:hit?BOSS_OK[b]:BOSS_MISS[b]);
   act(tone==='award'?'salute':'done');SFX.play(tone==='award'?'fanfare':'chime');log(BOSS[b].who+'에게 보고했습니다 (공적 +'+fmt(m)+')','good');
@@ -2783,7 +2807,7 @@ function openIncident(u){
   };
   showSheet();
 }
-function resolve(t,def,i){
+function resolve(t,def,i,force){
   const c=def.c[i];removeTask(t.u);let res;
   if(c.run){res=c.run();}
   else{
@@ -2792,7 +2816,7 @@ function resolve(t,def,i){
       if(b==='fm')p+=c.k==='fm'?.08:c.k==='sh'?-.15:0;
       if(b==='sleepy'){if(c.k==='sh')p+=.12;if(c.wake)p-=.25;}
       p=clamp(p,.05,.97);}
-    const ok=R()<p;const o=variant(ok?c.ok:(c.no||c.ok));
+    const ok=force?true:R()<p;const o=variant(ok?c.ok:(c.no||c.ok));
     const a=apply(o,{rest:ok&&c.k==='sh'});
     const tone=a.award?'award':o.p>0?'disc':ok&&!def.hard?'good':'bad';
     res={tone,stamp:a.award?'포상':o.p>0?'징계 사유':def.hard?(ok?'경고':'질책'):ok?'양호':'미흡',x:o.x,out:a.out,more:''};
@@ -3528,7 +3552,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-195811';
+const VER='2026.11.16-200623';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
