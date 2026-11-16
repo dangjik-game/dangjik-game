@@ -1027,7 +1027,10 @@ const STK=[
   {id:'hb',n:'한별전자',b:72000,s:.022,t:'대형주 · 전자'},{id:'dh',n:'대한반도체',b:185000,s:.03,t:'대형주 · 반도체'},
   {id:'vt',n:'볼트모터스',b:360000,s:.045,t:'해외 · 전기차'},{id:'ar',n:'오로라테크',b:520000,s:.028,t:'해외 · 빅테크'},
   {id:'cm',n:'철모전자',b:2500,s:.04,t:'중소형주 · 전자'},{id:'jb',n:'짬밥식품',b:800,s:.025,t:'중소형주 · 식품'},{id:'gh',n:'군화제화',b:400,s:.03,t:'중소형주 · 의류'},
-  {id:'ys',n:'야식치킨',b:1200,s:.06,t:'중소형주 · 외식'},{id:'gr',n:'고라니모빌리티',b:5000,s:.09,t:'테마주 · 모빌리티'}];
+  {id:'ys',n:'야식치킨',b:1200,s:.06,t:'중소형주 · 외식'},{id:'gr',n:'고라니모빌리티',b:5000,s:.09,t:'테마주 · 모빌리티'},
+  {id:'kx',n:'코리아대표 ETF',b:35000,s:.01,div:.001,t:'ETF · 안정형 · 배당 0.1%'},{id:'ux',n:'해외대표 ETF',b:450000,s:.013,div:.001,t:'ETF · 해외 · 배당 0.1%'},
+  {id:'dd',n:'든든금융',b:60000,s:.014,div:.003,t:'배당주 · 금융 · 배당 0.3%'},{id:'jg',n:'전력공사',b:25000,s:.012,div:.004,t:'배당주 · 에너지 · 배당 0.4%'},
+  {id:'bs',n:'바이오새싹',b:15000,s:.11,t:'테마주 · 바이오 · 고위험'},{id:'bt',n:'별똥코인',b:30000,s:.15,t:'코인 · 초고위험'}];
 const NEWS_UP=['{n}, 신제품이 매점에서 품절','{n}, 깜짝 실적 발표','{n}, 대형 납품 계약 체결','{n}, 해외 진출 소식'];
 const NEWS_DN=['{n}, 제품 회수 사태','{n}, 대표 구설수','{n}, 납품 지연 논란','{n}, 공장 가동 중단'];
 const WEAR=[
@@ -1624,8 +1627,12 @@ const RE=[
  {id:'town',n:'타운하우스',p:6000000,buy:1,live:24},
  {id:'mapt',n:'중형 아파트',p:12000000,lot:.025,buy:1,live:28},
  {id:'bapt',n:'대형 아파트',p:30000000,buy:1,live:34},
+ {id:'hvilla',n:'고급 빌라',p:50000000,buy:1,live:38},
  {id:'pent',n:'강변 펜트하우스',p:100000000,lot:.01,buy:1,live:45},
- {id:'bldg',n:'꼬마 빌딩',p:500000000,buy:1,live:0,rentK:.008,d:'살 수는 없고 세만 놓을 수 있음'}
+ {id:'rview',n:'한강뷰 아파트',p:200000000,buy:1,live:50},
+ {id:'mans',n:'단독 저택',p:300000000,buy:1,live:55},
+ {id:'bldg',n:'꼬마 빌딩',p:500000000,buy:1,live:0,rentK:.008,d:'살 수는 없고 세만 놓을 수 있음'},
+ {id:'mall',n:'상가 건물',p:1000000000,buy:1,live:0,rentK:.009,d:'살 수는 없고 세만 놓을 수 있음'}
 ];
 /* 청약 당첨 확률: 낙첨될 때마다 가점이 쌓여 조금씩 오르지만 기본 확률의 2배를 넘지 않는다 */
 const lotP=h=>Math.min(h.lot*2,h.lot*(1+.1*lifeFix().re.pts));
@@ -1643,7 +1650,9 @@ const EDU=[
 ];
 const CARS=[
  {id:'mini',n:'중고 경차',p:30000,g:3},{id:'comp',n:'준중형 세단',p:120000,g:6},{id:'suv',n:'SUV',p:400000,g:9,camp:3},
- {id:'pick',n:'픽업트럭',p:800000,g:10,camp:6},{id:'lux',n:'수입 세단',p:3000000,g:14},{id:'sport',n:'스포츠카',p:15000000,g:18}
+ {id:'pick',n:'픽업트럭',p:800000,g:10,camp:6},{id:'hyb',n:'중형 하이브리드',p:1500000,g:12},{id:'lux',n:'수입 세단',p:3000000,g:14},
+ {id:'bsuv',n:'대형 SUV',p:6000000,g:15,camp:8},{id:'esuv',n:'전기 SUV',p:9000000,g:16,camp:5},{id:'sport',n:'스포츠카',p:15000000,g:18},
+ {id:'limo',n:'럭셔리 리무진',p:30000000,g:20},{id:'super',n:'슈퍼카',p:50000000,g:22},{id:'classic',n:'클래식 명차',p:100000000,g:24}
 ];
 const GEAR=[
  {id:'tent',n:'텐트',p:15000,c:4,need:1},{id:'tarp',n:'타프',p:8000,c:3},{id:'chair',n:'캠핑 의자',p:4000,c:2},{id:'table',n:'캠핑 테이블',p:5000,c:2},
@@ -1735,6 +1744,20 @@ function lifeShift(){
     else if(x<.55){b+=5;t='쏟아지는 별을 보며 불멍을 했습니다';}
     else t='조용하고 편안한 캠핑이었습니다';
     L.camp.buff=b;S.stats.camps=(S.stats.camps||0)+1;out.push(['캠핑',t+' · 다음 근무 수당·공적 +'+b+'%']);}
+  /* 유지비: 집 보유세(시세의 0.1%) + 차 유지비(차값의 0.15%) */
+  let tax=0;Object.keys(r.own).forEach(id=>{const h=RE_BY[id];if(h&&!h.kw)tax+=r.px[id]*.001;});
+  const car=carNow(),cu=car?car.p*.0015:0;
+  const up=Math.round(tax+cu);
+  if(up>0){if(S.gold>=up){S.gold-=up;out.push(['유지비','-'+fmt(up)+'원 ('+[tax?'보유세 '+fmt(Math.round(tax)):'',cu?'차 유지비 '+fmt(Math.round(cu)):''].filter(Boolean).join(' · ')+')']);}
+    else{S.gold=0;S.rep=clamp(S.rep-2,0,100);out.push(['유지비','돈이 모자라 체납했습니다 · 평판 -2']);}}
+  /* 경조사: 근무 끝날 때 가끔 축의금·조의금이 나간다 */
+  if(R()<.14){const E=[['동기 결혼식','축의금'],['선임 자녀 돌잔치','축하금'],['후임 부친상','조의금'],['사령 진급 축하','화환'],['동기 집들이','선물'],['전역하는 선임','송별 회식비']];
+    const e=E[Math.floor(R()*E.length)],amt=Math.max(1000,Math.round(RATE[S.rk]*600*(1+R())/1000)*1000);
+    if(S.gold>=amt){S.gold-=amt;S.rep=clamp(S.rep+1,0,100);out.push(['경조사',e[0]+' '+e[1]+' -'+fmt(amt)+'원 · 평판 +1']);}
+    else{S.rep=clamp(S.rep-1,0,100);out.push(['경조사',e[0]+'에 '+e[1]+'을 못 냈습니다 · 평판 -1']);}}
+  /* 배당금 */
+  if(S.mk){let dv=0;STK.forEach(k=>{if(k.div&&S.mk.own[k.id]&&S.mk.own[k.id].n>0)dv+=S.mk.own[k.id].n*S.mk.p[k.id]*k.div;});
+    if(dv>=1){dv=Math.round(dv);S.gold+=dv;out.push(['배당금','+'+fmt(dv)+'원']);}}
   if(L.pet){const p=L.pet,food=1000;if(S.gold>=food){S.gold-=food;p.love++;}else p.love=Math.max(0,p.love-2);out.push(['반려동물',p.name+' 친밀도 '+p.love+(p.love>=30?' (최대)':'')]);}
   return out;
 }
@@ -1755,7 +1778,7 @@ function lifeView(v){
   const L=lifeFix(),r=L.re;
   if(v==='home'){
     const h=liveH();let s='<div class="row"><b>지금 사는 곳</b><p>'+(h?h.n+' · 근무 수당 +'+h.live+'%':'독신자 숙소 · 아직 내 집이 없습니다')+(r.pts?' · 청약 가점 '+r.pts:'')+'</p></div>'+
-      '<p class="note">청약은 분양가(시세의 80%)로 싸게 사는 대신 운에 맡깁니다. 떨어지면 90%를 돌려받고 가점이 쌓입니다. 매매는 시세로 바로 삽니다. 살지 않는 집은 세를 놓아 근무마다 월세가 들어옵니다. 집값은 근무마다 오르내립니다.</p>';
+      '<p class="note">청약은 분양가(시세의 80%)로 싸게 사는 대신 운에 맡깁니다. 떨어지면 90%를 돌려받고 가점이 쌓입니다. 매매는 시세로 바로 삽니다. 가진 집마다 근무 때 시세의 0.1%가 보유세로 나갑니다. 살지 않는 집은 세를 놓아 근무마다 월세가 들어옵니다. 집값은 근무마다 오르내립니다.</p>';
     s+=RE.map(x=>{const o=r.own[x.id],px=Math.round(r.px[x.id]),ch=x.p?(px/x.p-1)*100:0;
       const info=(x.kw?'무료':'시세 '+fmt(px)+' ('+(ch>=0?'+':'')+ch.toFixed(0)+'%)')+(x.live?' · 살면 수당 +'+x.live+'%':'')+(x.kw?'':' · 월세 '+fmt(px*(x.rentK||.004))+'/근무')+(x.d?' · '+x.d:'');
       let btns='';
@@ -1768,7 +1791,7 @@ function lifeView(v){
   if(v==='edu')return '<p class="note">한 번에 한 과정씩 듣습니다. 근무를 정해진 횟수만큼 마치면 수료하고, 효과는 계속 남습니다.</p>'+
     (L.edu.cur?'<div class="row"><b>수강 중: '+EDU.find(x=>x.id===L.edu.cur.id).n+'</b><p>남은 근무 '+L.edu.cur.left+'회</p></div>':'')+
     EDU.map(e=>{const d=L.edu.done.includes(e.id);return '<div class="row'+(d?' locked':'')+'"><b>'+e.n+(d?' · 수료':'')+'</b><p>'+e.t+' · 근무 '+e.s+'회</p>'+(d?'':LB('edu',e.id,'수강 신청',e.c,!!L.edu.cur))+'</div>';}).join('');
-  if(v==='car'){const c=carNow();return '<p class="note">차는 한 대만 탑니다. 새 차를 사면 타던 차는 산 값의 60%로 보상 판매합니다. SUV와 픽업트럭은 캠핑 편안함도 올려 줍니다.</p>'+
+  if(v==='car'){const c=carNow();return '<p class="note">차는 한 대만 탑니다. 새 차를 사면 타던 차는 산 값의 60%로 보상 판매합니다. SUV·픽업트럭은 캠핑 편안함도 올려 줍니다. 근무마다 차값의 0.15%가 유지비로 나갑니다.</p>'+
     CARS.map(x=>{const on=c&&c.id===x.id,need=x.p-(c?Math.round(c.p*.6):0);return '<div class="row'+(on?' re-own':'')+'"><b>'+x.n+(on?' · 타는 중':'')+'</b><p>근무 수당 +'+x.g+'%'+(x.camp?' · 캠핑 편안함 +'+x.camp:'')+' · 가격 '+fmt(x.p)+'</p>'+
       (on?LB('carsell',x.id,'팔기<small>'+fmt(Math.round(x.p*.6))+'</small>',0):LB('car',x.id,'사기',Math.max(0,need)))+'</div>';}).join('');}
   if(v==='camp'){const cf=comfort();return '<div class="row"><b>퇴근 후 캠핑</b><p>캠핑장 '+fmt(CAMP_COST)+'원 · 편안함 '+cf+' → 다음 근무 수당·공적 약 +'+Math.min(40,6+cf)+'% · 날씨와 운에 따라 달라짐</p>'+
@@ -3079,7 +3102,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-142214';
+const VER='2026.11.16-143225';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
