@@ -2914,6 +2914,7 @@ const fbReady=(async()=>{
     fbUid=cred.user.uid;fb=app.firestore();
   }catch(e){fb=null;}
 })();
+fbReady.then(()=>{if(fb)setTimeout(pushRank,500);});
 async function pushRank(){
   if(!fb||fbBusy||!S||!S.unit)return;
   const d={unit:String(S.unit).slice(0,12),rk:S.rk|0,hb:Math.max(1,S.hb|0),merit:Math.max(0,Math.floor(S.merit)),gold:Math.max(0,Math.floor(S.gold)),day:Math.max(1,S.day|0),title:titleOf().slice(0,20)};
@@ -3078,7 +3079,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-142052';
+const VER='2026.11.16-142214';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
