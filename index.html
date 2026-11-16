@@ -2733,7 +2733,7 @@ const NAME_RE=/^[가-힣A-Za-z]{2,10}$/;
 const rankOf=m=>{let r=0;while(r<TH.length-1&&m>=TH[r+1])r++;return r;};
 let online=[],rankState='wait';
 function renderRank(){
-  const rows=NPC.map(n=>({name:n[0],merit:n[1]+n[2]*S.stats.shifts,npc:1}));
+  const rows=[];
   const myId=fb?fbUid:uid;
   online.forEach(o=>{if(o.id!==myId)rows.push({name:NAME_RE.test(o.name)?o.name:'이름 숨김',merit:o.merit,live:1,rk:o.rk,hb:o.hb});});
   rows.push({name:S.unit,merit:Math.floor(S.merit),me:1});
@@ -2749,9 +2749,9 @@ function renderRank(){
     tr.append(n,nm,rk,m);el.appendChild(tr);
   });
   const others=online.filter(o=>o.id!==(fb?fbUid:uid)).length;
-  $('rankNote').textContent=rankState==='off'?'온라인 랭킹에 연결하지 못했습니다. 지금은 가상 부대와 겨룹니다.'
-    :rankState==='wait'?'온라인 랭킹을 불러오는 중입니다. 가상 부대는 바로 볼 수 있습니다.'
-    :others?'접속한 다른 부대 '+others+'곳과 가상 부대가 함께 표시됩니다.':'아직 다른 부대가 없습니다. 가상 부대와 먼저 겨뤄 보세요.';
+  $('rankNote').textContent=rankState==='off'?'온라인 랭킹에 연결하지 못했습니다. 잠시 뒤 다시 열어 주세요.'
+    :rankState==='wait'?'온라인 랭킹을 불러오는 중입니다.'
+    :others?'전국 '+(others+1)+'개 부대가 겨루고 있습니다.':'아직 다른 부대가 없습니다. 친구를 불러 보세요.';
 }
 function render(){
   renderHud();
@@ -3078,7 +3078,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-141054';
+const VER='2026.11.16-142052';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
