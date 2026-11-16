@@ -300,6 +300,18 @@ h2{font-family:var(--display);font-weight:400;font-size:18px;margin:0;letter-spa
 .wt-btn:active{transform:scale(.95);background:#3b86bd}.wt-btn:disabled{opacity:.4}
 .port .wt-side{flex-direction:row;width:auto;gap:16px}.port .wt-btn{width:92px;height:92px;font-size:17px}.port .wt-msg{width:150px}
 .upv{color:var(--text);font-size:12.5px}.upv b{color:var(--brass)}
+.guide{position:fixed;inset:0;z-index:60}
+.gd-hole{position:absolute;border-radius:10px;border:2px solid var(--brass);box-shadow:0 0 0 9999px #000000b8;transition:all .25s ease;pointer-events:none}
+.gd-hole.none{left:50%;top:40%;width:0;height:0;border:0}
+.gd-card{position:absolute;left:12px;right:12px;max-width:420px;margin:0 auto;background:#1b211c;border:1px solid var(--brass);border-radius:10px;padding:14px 16px;color:#efeadb;box-shadow:0 8px 30px #0008}
+.gd-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#a9a48e}
+.gd-skip{background:none;border:0;color:#a9a48e;font-size:13px;text-decoration:underline;padding:4px}
+.gd-card h3{margin:6px 0 6px;font-family:var(--display);font-weight:400;font-size:21px;color:var(--brass)}
+.gd-card p{margin:0;font-size:14.5px;line-height:1.6}
+.gd-card p b{color:var(--brass)}
+.gd-btns{display:flex;gap:8px;margin-top:12px}
+.gd-btns button{flex:1;padding:11px;border-radius:6px;font-size:15px;font-weight:700;border:0}
+.gd-prev{background:#333b34;color:#cfcab6}.gd-next{background:var(--brass);color:#1b1b14}
 .gate-tip{margin:-2px 0 4px;font-size:12px;line-height:1.5;color:#c9c3a8}.gate-tip b{color:var(--brass)}
 .xfer{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .xfer p{margin:0;font-size:13px;line-height:1.5}.xfer p b{color:var(--brass)}
@@ -396,6 +408,7 @@ h2{font-family:var(--display);font-weight:400;font-size:18px;margin:0;letter-spa
           <button type="button" class="btn-b" id="codeLoad">불러오기</button>
           <p class="note">불러오면 그 휴대폰에 있던 기록은 코드의 기록으로 바뀝니다. 코드는 그 순간의 기록이라, 옮긴 뒤 예전 휴대폰에서 계속하면 두 기록이 따로 갑니다.</p>
         </div>
+        <div class="row"><b>게임 가이드</b><p>처음 할 때 나온 안내를 다시 봅니다</p><button type="button" class="buy" id="guideBtn">다시 보기</button></div>
         <button class="link" id="resetBtn" type="button">처음부터 다시 시작</button>
       </section>
       <section id="tab-rank" class="stack" hidden>
@@ -469,6 +482,14 @@ h2{font-family:var(--display);font-weight:400;font-size:18px;margin:0;letter-spa
     <div class="err" id="gateErr" role="alert"></div>
     <button class="btn" type="submit" id="gateBtn">근무 투입</button>
   </form>
+</div>
+<div class="guide" id="guide" hidden>
+  <div class="gd-hole" id="gdHole"></div>
+  <div class="gd-card" id="gdCard" role="dialog" aria-live="polite">
+    <div class="gd-top"><span id="gdStep"></span><button type="button" class="gd-skip" id="gdSkip">건너뛰기</button></div>
+    <h3 id="gdTitle"></h3><p id="gdText"></p>
+    <div class="gd-btns"><button type="button" class="gd-prev" id="gdPrev">이전</button><button type="button" class="gd-next" id="gdNext">다음</button></div>
+  </div>
 </div>
 <div class="gate" id="loading"><p>지휘통제실 불을 켜는 중입니다.</p></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -3018,6 +3039,7 @@ function start(state,isNew){
   if(gap>30)away(gap);
   layout();setTimeout(()=>say('start',true),900);if(rot)toast('휴대폰을 가로로 돌려 잡으세요');
   save();render();
+  if(!S.tut)setTimeout(()=>{if(S&&!S.tut)guideOpen();},1200);
 }
 /* 캐릭터 선택: 얼굴 미리보기는 게임 속 픽셀 무늬와 같은 규칙으로 그린다 */
 let gateSex='m';
@@ -3075,6 +3097,38 @@ $('rnBtn').addEventListener('click',async()=>{if(!S)return;const m=$('rnMsg'),v=
   const old=S.unit;S.gold-=cost;S.unit=v;S.rn=(S.rn|0)+1;fbLast='';
   hist('부대 이름 변경: '+old+' → '+v);dirty.chips=true;save();cloudDirty=true;flushCloud(true);dirty.rank=true;
   $('rnIn').value='';rnShow();say('부대 이름을 '+v+'(으)로 바꿨습니다'+(cost?' (-'+RN_TXT+')':'')+'.',true);});
+/* ───── 처음 하는 사람용 가이드: 화면 요소를 하나씩 비추며 설명한다 ───── */
+const GUIDE=[
+ {t:'당직부관 키우기',x:'오늘부터 당신은 <b>당직부관</b>입니다. 지휘통제실에서 들어오는 임무를 처리하고, 돈과 공적을 모아 <b>참모총장</b>까지 진급해 보세요.'},
+ {el:'#missions',t:'임무 목록',x:'처리할 임무가 여기 쌓입니다. <b>임무를 누르면</b> 캐릭터가 그 위치로 알아서 걸어갑니다. 막대가 다 줄기 전에 끝내야 합니다.'},
+ {el:'#stick',t:'이동 스틱',x:'왼쪽 아래 스틱으로 <b>직접 걸어 다닐 수도</b> 있습니다. 전화기·키함·컴퓨터 근처에만 가도 됩니다.'},
+ {el:'#actBtn',t:'액션 버튼',x:'임무 위치에 도착하면 <b>액션</b>을 누르세요. 처리하는 동안 게이지가 차고, 다 차면 임무 완료입니다.'},
+ {el:'.ov-right .st-clock',t:'시계와 마감',x:'근무 시간이 흐르는 시계입니다. 아래 <b>마감</b> 시간 안에 임무를 끝내야 혼나지 않습니다. 당직사령의 호출은 특히 빨리 가세요.'},
+ {el:'.hud',t:'내 상태',x:'계급·호봉, 가진 <b>돈</b>, 평판, 벌점이 보입니다. 공적을 모으면 호봉이 오르고, 호봉을 다 채우고 표창·평판 조건을 맞추면 <b>진급 심사</b>를 받습니다.'},
+ {el:'#menu [data-tab="up"]',t:'강화',x:'번 돈으로 <b>능력을 강화</b>합니다. 이동 속도, 처리 속도, 당직병 도움 등을 올리면 근무가 훨씬 편해집니다.'},
+ {el:'#menu [data-tab="shop"]',t:'영외',x:'근무 밖의 생활입니다. <b>집(청약·매매), 자동차, 주식, 자기계발, 캠핑, 적금, 반려동물</b>이 있고, 옷도 살 수 있습니다. 좋은 집과 차는 근무 수당을 올려 줍니다.'},
+ {el:'#menu [data-tab="rank"]',t:'실시간 랭킹',x:'다른 사람들의 부대와 <b>실시간으로 순위</b>를 겨룹니다. 부대 이름이 곧 내 아이디로 공개됩니다.'},
+ {el:'#menu [data-tab="set"]',t:'설정',x:'<b>부대 이름 변경</b>, 쿠폰, <b>다른 휴대폰으로 기록 옮기기</b>가 있습니다. 이 가이드도 여기서 다시 볼 수 있어요.'},
+ {t:'숨은 재미',x:'<b>CCTV·방송대·정수기</b> 앞에서 액션을 누르면 하루 한 번 <b>미니게임</b>을 할 수 있습니다. 사령마다 성격이 달라 같은 보고도 결과가 달라집니다. 그럼 근무 시작!'}
+];
+let gdI=0,gdWas=false;
+function guideOpen(){if(!S)return;setTab('duty');gdI=0;gdWas=paused;paused=true;stopInput();$('guide').hidden=false;guideShow();}
+function guideClose(){$('guide').hidden=true;if(S){S.tut=1;save();}paused=gdWas;lastT=Date.now();}
+function guideShow(){
+  const g=GUIDE[gdI],hole=$('gdHole'),card=$('gdCard');
+  $('gdStep').textContent=(gdI+1)+' / '+GUIDE.length;$('gdTitle').textContent=g.t;$('gdText').innerHTML=g.x;
+  $('gdPrev').style.visibility=gdI?'visible':'hidden';$('gdNext').textContent=gdI===GUIDE.length-1?'시작하기':'다음';
+  const el=g.el?document.querySelector(g.el):null,r=el&&el.offsetParent!==null?el.getBoundingClientRect():null;
+  const H=window.innerHeight;
+  if(r&&r.width){const p=6;hole.className='gd-hole';Object.assign(hole.style,{left:(r.left-p)+'px',top:(r.top-p)+'px',width:(r.width+p*2)+'px',height:(Math.max(r.height,24)+p*2)+'px'});
+    const below=r.top+r.height/2<H/2;card.style.top=below?Math.min(H-card.offsetHeight-12,r.bottom+16)+'px':'';card.style.bottom=below?'':Math.min(H-card.offsetHeight-12,H-r.top+16)+'px';}
+  else{hole.className='gd-hole none';hole.removeAttribute('style');card.style.top='';card.style.bottom=Math.round(H*.32)+'px';}
+}
+$('gdNext').addEventListener('click',()=>{if(gdI>=GUIDE.length-1)return guideClose();gdI++;guideShow();});
+$('gdPrev').addEventListener('click',()=>{if(gdI>0){gdI--;guideShow();}});
+$('gdSkip').addEventListener('click',guideClose);
+$('guideBtn').addEventListener('click',()=>guideOpen());
+window.addEventListener('resize',()=>{if(!$('guide').hidden)guideShow();});
 $('rnIn').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')$('rnBtn').click();});
 $('cpBtn').addEventListener('click',()=>{if(!S)return;const r=cpUse($('cpCode').value),m=$('cpMsg');m.textContent=r[1];m.className='cp-msg '+(r[0]?'ok':'no');
   if(r[0]){$('cpCode').value='';SFX.play('coin');log('쿠폰 사용: '+r[1],'up');render();}else SFX.play('slip');});
@@ -3141,7 +3195,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-163154';
+const VER='2026.11.16-164030';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
