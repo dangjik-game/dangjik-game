@@ -2057,32 +2057,41 @@ function autoPaint(){const b=$('autoBtn');if(!b||!S)return;const a=autoFix(),liv
   b.classList.toggle('on',live&&a.on);b.textContent=live?(a.on?'자동\nON':'자동\n멈춤'):'자동\n근무';}
 setTimeout(()=>{const b=$('autoBtn');if(b)b.addEventListener('click',()=>{autoBtnTap();});setInterval(()=>{if(S){autoTick();autoPaint();}},400);},0);
 
-/* ── 코인 상장폐지: 별똥코인 자리는 가끔 '투자 유의'를 거쳐 상장폐지되고, 그러면 가진 코인은 0원이 된다.
-   대신 바로 새 이름의 코인이 상장된다. 저장: S.mk.coin={nm,b,warn,gen} ── */
+/* ── 상장폐지: 모든 종목이 가끔 '투자 유의'를 거쳐 상장폐지될 수 있다(위험한 종목일수록 자주).
+   폐지되면 가진 주식은 0원, 그 자리에 같은 업종의 새 회사가 상장된다. 저장: S.mk.dl[id]={nm,b,warn,gen} ── */
+const DL_PRE=['새빛','푸른','한울','다온','미래','누리','하늘','바른','으뜸','별빛','가람','해든','다래','초록','은빛','온새미'];
+const DL_SUF=['반도체','모빌리티','모터스','전자','테크','치킨','식품','제화','금융','공사','새싹','ETF','코인'];
 const COIN_NM=['별똥','달토끼','번개','도토리','은하수','구름빵','블랙홀','무지개','솜사탕','고구마','반딧불','해파리','꼬꼬닭','눈사람','쿼카','두더지'];
-function coinSync(){
-  if(!S||!S.mk)return;const k=STK.find(x=>x.id==='bt');if(!k)return;
-  if(!S.mk.coin||typeof S.mk.coin!=='object')S.mk.coin={nm:'별똥코인',b:k.b,warn:0,gen:1};
-  const c=S.mk.coin;k.n=c.nm;k.b=c.b;k.t='코인 · 초고위험 · 상장폐지 위험'+(c.warn>0?' · ⚠ 투자 유의 종목':'');
+const dlRisk=k=>k.id==='bt'?.0012:Math.min(.0008,.0012*Math.pow(k.s/.15,2));
+function stkSync(){
+  if(!S||!S.mk)return;if(!S.mk.dl||typeof S.mk.dl!=='object')S.mk.dl={};
+  STK.forEach(k=>{if(k.n0==null){k.n0=k.n;k.b0=k.b;k.t0=k.t.replace(' · 상장폐지 위험','');}
+    const d=S.mk.dl[k.id];k.n=d&&d.nm?d.nm:k.n0;k.b=d&&d.b?d.b:k.b0;
+    k.t=k.t0+(k.id==='bt'?' · 상장폐지 위험':'')+(d&&d.warn>0?' · ⚠ 투자 유의 종목':'');});
+}
+const coinSync=stkSync;
+function newName(k){
+  if(k.id==='bt'){let n;do{n=COIN_NM[Math.floor(R()*COIN_NM.length)]+'코인';}while(n===k.n);return n;}
+  const suf=DL_SUF.find(x=>k.n0.endsWith(x))||'홀딩스';let n;do{n=DL_PRE[Math.floor(R()*DL_PRE.length)]+(suf==='ETF'?' ETF':suf);}while(n===k.n||STK.some(x=>x!==k&&x.n===n));return n;
 }
 function coinTick(quiet){
-  coinSync();const c=S.mk.coin,k=STK.find(x=>x.id==='bt'),o=S.mk.own.bt,held=o&&o.n>0;
-  if(c.warn>0){c.warn--;S.mk.p.bt=Math.max(1,Math.round(S.mk.p.bt*(1+(R()-.6)*.25)));
-    if(c.warn===0){
-      if(R()<.6){/* 상장폐지 */
-        const lost=held?Math.round(o.cost):0,old=c.nm;
+  stkSync();
+  STK.forEach(k=>{
+    const D=S.mk.dl,d=D[k.id]||(D[k.id]={nm:'',b:0,warn:0,gen:1}),o=S.mk.own[k.id],held=o&&o.n>0;
+    if(d.warn>0){d.warn--;S.mk.p[k.id]=Math.max(1,Math.round(S.mk.p[k.id]*(1+(R()-.6)*Math.min(.25,k.s*2))));
+      if(d.warn>0)return;
+      if(R()<(k.id==='bt'?.6:.4)){/* 상장폐지 */
+        const lost=held?Math.round(o.cost):0,old=k.n,nm=newName(k),b=k.id==='bt'?Math.round((3000+R()*60000)/100)*100:Math.max(100,Math.round(k.b0*(.6+R()*.8)/100)*100);
         if(held){S.stats.stockGain=(S.stats.stockGain||0)-lost;hist(old+' 상장폐지 · 투자금 '+fmt(lost)+'원 손실','bad');}
-        S.mk.own.bt={n:0,cost:0};
-        let nm;do{nm=COIN_NM[Math.floor(R()*COIN_NM.length)]+'코인';}while(nm===old);
-        const b=Math.round((3000+R()*60000)/100)*100;S.mk.coin={nm,b,warn:0,gen:(c.gen||1)+1};S.mk.p.bt=b;S.mk.h.bt=[b];coinSync();
+        S.mk.own[k.id]={n:0,cost:0};D[k.id]={nm,b,warn:0,gen:(d.gen||1)+1};S.mk.p[k.id]=b;S.mk.h[k.id]=[b];stkSync();
         S.mk.news=old+' 상장폐지 · '+nm+' 신규 상장 ▲';
-        if(!quiet){if(held){SFX.play('down');popOpen('<h3 class="pop-t">상장폐지</h3><p class="pop-l">'+esc(old)+'이(가) 거래소에서 상장폐지됐습니다. 가지고 있던 코인은 모두 휴지 조각이 됐습니다.</p><p class="pop-g" style="color:#ff7a6e">-'+fmt(lost)+'원</p><p class="pop-n">새 코인 「'+esc(nm)+'」이(가) 상장됐습니다.</p>',[{t:'...'}]);}
-          else toast('코인 소식: '+S.mk.news,'up');}
+        if(!quiet){if(held){SFX.play('down');popOpen('<h3 class="pop-t">상장폐지</h3><p class="pop-l">'+esc(old)+'이(가) 거래소에서 상장폐지됐습니다. 가지고 있던 '+(k.id==='bt'?'코인':'주식')+'은 모두 휴지 조각이 됐습니다.</p><p class="pop-g" style="color:#ff7a6e">-'+fmt(lost)+'원</p><p class="pop-n">그 자리에 「'+esc(nm)+'」이(가) 새로 상장됐습니다.</p>',[{t:'...'}]);}
+          else toast('주식 소식: '+S.mk.news,'up');}
         return;}
-      S.mk.p.bt=Math.round(S.mk.p.bt*1.3);S.mk.news=c.nm+' 투자 유의 해제 ▲';if(!quiet&&held)toast('코인 소식: '+S.mk.news,'up');coinSync();return;}
-    coinSync();return;}
-  if(R()<.0012){c.warn=6;S.mk.p.bt=Math.max(1,Math.round(S.mk.p.bt*.6));S.mk.news=c.nm+' 투자 유의 종목 지정 ▼ (상장폐지 위험)';coinSync();
-    if(!quiet&&held){SFX.play('down');toast('⚠ '+S.mk.news,'');}}
+      S.mk.p[k.id]=Math.round(S.mk.p[k.id]*1.3);S.mk.news=k.n+' 투자 유의 해제 ▲';stkSync();if(!quiet&&held)toast('주식 소식: '+S.mk.news,'up');return;}
+    if(R()<dlRisk(k)){d.warn=6;S.mk.p[k.id]=Math.max(1,Math.round(S.mk.p[k.id]*.6));stkSync();S.mk.news=k.n+' 투자 유의 종목 지정 ▼ (상장폐지 위험)';
+      if(!quiet&&held){SFX.play('down');toast('⚠ '+S.mk.news,'');}}
+  });
 }
 /* ───── 휴가 · 연애 · 결혼 ─────
    S.vac = {next:다음 근무 보너스%, buff:이번 근무 보너스%, cd:다음 휴가 가능 일차}
@@ -3586,7 +3595,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-204122';
+const VER='2026.11.16-204326';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
