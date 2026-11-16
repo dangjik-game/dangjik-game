@@ -1728,7 +1728,9 @@ const CARS=[
  {id:'mini',n:'중고 경차',p:30000,g:3},{id:'comp',n:'준중형 세단',p:120000,g:6},{id:'suv',n:'SUV',p:400000,g:9,camp:3},
  {id:'pick',n:'픽업트럭',p:800000,g:10,camp:6},{id:'hyb',n:'중형 하이브리드',p:1500000,g:12},{id:'lux',n:'수입 세단',p:3000000,g:14},
  {id:'bsuv',n:'대형 SUV',p:6000000,g:15,camp:8},{id:'esuv',n:'전기 SUV',p:9000000,g:16,camp:5},{id:'sport',n:'스포츠카',p:15000000,g:18},
- {id:'limo',n:'럭셔리 리무진',p:30000000,g:20},{id:'super',n:'슈퍼카',p:50000000,g:22},{id:'classic',n:'클래식 명차',p:100000000,g:24}
+ {id:'limo',n:'럭셔리 리무진',p:30000000,g:20},{id:'super',n:'슈퍼카',p:50000000,g:22},{id:'classic',n:'클래식 명차',p:100000000,g:24},
+ {id:'hyper',n:'하이퍼카',p:200000000,g:25},{id:'heli',n:'개인 헬기',p:500000000,g:27},{id:'yacht',n:'호화 요트',p:1000000000,g:29,camp:10},
+ {id:'jet',n:'개인 제트기',p:3000000000,g:32},{id:'rocket',n:'우주선',p:10000000000,g:36}
 ];
 const GEAR=[
  {id:'tent',n:'텐트',p:15000,c:4,need:1},{id:'tarp',n:'타프',p:8000,c:3},{id:'chair',n:'캠핑 의자',p:4000,c:2},{id:'table',n:'캠핑 테이블',p:5000,c:2},
@@ -3552,7 +3554,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-200623';
+const VER='2026.11.16-200827';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
