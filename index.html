@@ -2008,7 +2008,7 @@ function renderRankAlt(){
     mode==='w'?'이번 주(월요일 0시부터) 쌓은 공적 순위입니다. 다음 주 처음 들어올 때 지난주 순위대로 보상을 받습니다. 1위 표창 +1 · 2~3위 · 4~10위 · 참여 보상.':
     '현금 + 집 시세 + 차 + 주식 + 적금을 합친 총자산 순위입니다.';
 }
-function moneyShort(v){return v>=1e8?(v/1e8).toFixed(v>=1e10?0:1).replace(/\.0$/,'')+'억원':v>=1e4?Math.round(v/1e4).toLocaleString('ko-KR')+'만원':fmt(v)+'원';}
+function moneyShort(v){return v>=1e12?(v/1e12).toFixed(2).replace(/\.?0+$/,'')+'조원':v>=1e8?(v/1e8).toFixed(v>=1e10?0:1).replace(/\.0$/,'')+'억원':v>=1e4?Math.round(v/1e4).toLocaleString('ko-KR')+'만원':fmt(v)+'원';}
 
 /* ── 자동 근무 1회권: 그날 근무 한 번 동안 모든 임무를 순간 이동·빠른 처리·성공 100%로. 보상 70%.
    살 수 있는 수는 제한 없음. 첫 장 50만원, 같은 날(한국 날짜) 살 때마다 두 배. 다음 날 50만원으로 돌아간다 ── */
@@ -2475,7 +2475,7 @@ let lastSay=0,ringAt=0;
 function say(kind,force){if(!V3||!S||!S.meta)return;const now=Date.now();if(!force&&now-lastSay<7000)return;lastSay=now;V3.say(SAY[kind][S.meta.boss]);}
 const luckV=()=>LUCK.find(l=>l[0]===S.meta.luck)[1];
 function fmt(n){n=Math.floor(n);const s=n<0?'-':'';n=Math.abs(n);
-  if(n>=1e8)return s+(n/1e8).toFixed(2)+'억';if(n>=1e5)return s+(n/1e4).toFixed(1)+'만';return s+n.toLocaleString('ko-KR');}
+  if(n>=1e12)return s+(n/1e12).toFixed(2)+'조';if(n>=1e8)return s+(n/1e8).toFixed(2)+'억';if(n>=1e5)return s+(n/1e4).toFixed(1)+'만';return s+n.toLocaleString('ko-KR');}
 function timeStr(c){const m=(START+Math.floor(c))%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
 const dirty={tasks:true,log:true,rec:true,up:true,rank:true,chips:true,shop:true};
 function log(x,c){S.log.unshift({t:timeStr(S.clock),x,c:c||'',ts:Date.now()});if(S.log.length>30)S.log.length=30;dirty.log=true;dirty.rec=true;}
@@ -3556,7 +3556,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-200933';
+const VER='2026.11.16-200959';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
