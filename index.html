@@ -300,6 +300,7 @@ h2{font-family:var(--display);font-weight:400;font-size:18px;margin:0;letter-spa
 .wt-btn:active{transform:scale(.95);background:#3b86bd}.wt-btn:disabled{opacity:.4}
 .port .wt-side{flex-direction:row;width:auto;gap:16px}.port .wt-btn{width:92px;height:92px;font-size:17px}.port .wt-msg{width:150px}
 .upv{color:var(--text);font-size:12.5px}.upv b{color:var(--brass)}
+.gate-tip{margin:-2px 0 4px;font-size:12px;line-height:1.5;color:#c9c3a8}.gate-tip b{color:var(--brass)}
 .xfer{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .xfer p{margin:0;font-size:13px;line-height:1.5}.xfer p b{color:var(--brass)}
 .xfer textarea{width:100%;font:12px/1.4 ui-monospace,monospace;background:#11150f;color:var(--text);border:1px solid var(--line);border-radius:3px;padding:8px;resize:vertical;word-break:break-all;user-select:text;-webkit-user-select:text}
@@ -372,6 +373,13 @@ h2{font-family:var(--display);font-weight:400;font-size:18px;margin:0;letter-spa
         <div class="sec-head"><h2>설정</h2></div>
         <div class="row" id="orientRow"><b>화면 방향</b><p>세로 화면에서도 가로로 돌려서 할 수 있습니다</p><button type="button" class="buy" id="orientBtn">가로로</button></div>
         <div class="row"><b>소리</b><p>효과음을 켜고 끕니다</p><button type="button" class="buy" id="soundBtn">소리 켬</button></div>
+        <div class="sec-head"><h2>부대 이름 (내 아이디)</h2><small>랭킹에 공개됩니다</small></div>
+        <div class="xfer">
+          <p>지금 이름: <b id="rnNow"></b></p>
+          <input id="rnIn" class="cp-in" maxlength="10" autocomplete="off" spellcheck="false" placeholder="새 부대 이름 (한글·영문 2~10자)">
+          <button type="button" class="btn-b" id="rnBtn">이름 바꾸기</button>
+          <p class="cp-msg" id="rnMsg"></p>
+        </div>
         <div class="sec-head"><h2>쿠폰</h2><small>대소문자는 구분하지 않습니다</small></div>
         <div class="xfer">
           <input id="cpCode" class="cp-in" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="쿠폰 코드를 입력하세요">
@@ -457,6 +465,7 @@ h2{font-family:var(--display);font-weight:400;font-size:18px;margin:0;letter-spa
     </div>
     <label for="unitInput">부대 이름 (한글·영문 2~10자)</label>
     <input id="unitInput" name="unit" maxlength="10" placeholder="예: 강철부대" inputmode="text">
+    <p class="gate-tip">부대 이름은 <b>온라인 랭킹에 공개되는 내 아이디</b>입니다. 실명이나 실제 부대명은 쓰지 마세요.</p>
     <div class="err" id="gateErr" role="alert"></div>
     <button class="btn" type="submit" id="gateBtn">근무 투입</button>
   </form>
@@ -2794,7 +2803,7 @@ function render(){
 function setTab(t){
   tab=t;shopView=null;$('view').hidden=t==='duty';
   ['up','rec','rank','shop','set'].forEach(k=>{$('tab-'+k).hidden=k!==t;});
-  dirty.up=dirty.rec=dirty.rank=dirty.shop=true;$('view').scrollTop=0;stopInput();if(S)render();
+  dirty.up=dirty.rec=dirty.rank=dirty.shop=true;$('view').scrollTop=0;stopInput();if(S)render();if(t==='set')rnShow();
 }
 
 /* ───── 화면 방향: 세로와 가로를 버튼으로 오간다. 가로를 골랐는데 세로로 열려 있으면 화면을 돌려서 그린다 ───── */
@@ -3051,6 +3060,22 @@ function cpUse(v){
     S.cpn.push(code);S.wear.own.push(it.id);S.wear[it.c]=it.id;outfitNow();dirty.shop=true;cloudDirty=true;save();return [1,"'"+it.n+"'을(를) 받았어요. 바로 입혀 드렸어요."];}
   if(!c.rep)S.cpn.push(code);S.gold+=c.g;cloudDirty=true;save();return [1,fmt(c.g)+'원을 받았어요.'];
 }
+/* 부대 이름 바꾸기: 처음 한 번은 무료, 그다음부터 1,000원 */
+const RN_COST=1000;
+function rnShow(){if(!S)return;$('rnNow').textContent=S.unit;$('rnBtn').textContent=(S.rn|0)>0?'이름 바꾸기 ('+fmt(RN_COST)+'원)':'이름 바꾸기 (첫 1회 무료)';}
+$('rnBtn').addEventListener('click',async()=>{if(!S)return;const m=$('rnMsg'),v=$('rnIn').value.trim(),cost=(S.rn|0)>0?RN_COST:0;
+  const say=(t,ok)=>{m.textContent=t;m.className='cp-msg '+(ok?'ok':'no');};
+  if(v===S.unit)return say('지금 쓰는 이름과 같습니다.');
+  const err=checkName(v);if(err)return say(err);
+  if(S.gold<cost)return say('돈이 모자랍니다. '+fmt(cost)+'원이 필요합니다.');
+  $('rnBtn').disabled=true;say('이름을 확인하는 중입니다.',true);
+  const taken=await nameTaken(v);$('rnBtn').disabled=false;
+  if(taken)return say('이미 다른 부대가 쓰는 이름입니다.');
+  if(S.gold<cost)return say('돈이 모자랍니다.');
+  const old=S.unit;S.gold-=cost;S.unit=v;S.rn=(S.rn|0)+1;fbLast='';
+  hist('부대 이름 변경: '+old+' → '+v);dirty.chips=true;save();cloudDirty=true;flushCloud(true);dirty.rank=true;
+  $('rnIn').value='';rnShow();say('부대 이름을 '+v+'(으)로 바꿨습니다'+(cost?' (-'+fmt(cost)+'원)':'')+'.',true);});
+$('rnIn').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')$('rnBtn').click();});
 $('cpBtn').addEventListener('click',()=>{if(!S)return;const r=cpUse($('cpCode').value),m=$('cpMsg');m.textContent=r[1];m.className='cp-msg '+(r[0]?'ok':'no');
   if(r[0]){$('cpCode').value='';SFX.play('coin');log('쿠폰 사용: '+r[1],'up');render();}else SFX.play('slip');});
 $('cpCode').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')$('cpBtn').click();});
@@ -3116,7 +3141,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-151926';
+const VER='2026.11.16-162853';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
