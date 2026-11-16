@@ -3061,20 +3061,20 @@ function cpUse(v){
   if(!c.rep)S.cpn.push(code);S.gold+=c.g;cloudDirty=true;save();return [1,fmt(c.g)+'원을 받았어요.'];
 }
 /* 부대 이름 바꾸기: 처음 한 번은 무료, 그다음부터 1,000만원 */
-const RN_COST=10000000;
-function rnShow(){if(!S)return;$('rnNow').textContent=S.unit;$('rnBtn').textContent=(S.rn|0)>0?'이름 바꾸기 ('+fmt(RN_COST)+'원)':'이름 바꾸기 (첫 1회 무료)';}
+const RN_COST=10000000,RN_TXT='1,000만원';
+function rnShow(){if(!S)return;$('rnNow').textContent=S.unit;$('rnBtn').textContent=(S.rn|0)>0?'이름 바꾸기 ('+RN_TXT+')':'이름 바꾸기 (첫 1회 무료)';}
 $('rnBtn').addEventListener('click',async()=>{if(!S)return;const m=$('rnMsg'),v=$('rnIn').value.trim(),cost=(S.rn|0)>0?RN_COST:0;
   const say=(t,ok)=>{m.textContent=t;m.className='cp-msg '+(ok?'ok':'no');};
   if(v===S.unit)return say('지금 쓰는 이름과 같습니다.');
   const err=checkName(v);if(err)return say(err);
-  if(S.gold<cost)return say('돈이 모자랍니다. '+fmt(cost)+'원이 필요합니다.');
+  if(S.gold<cost)return say('돈이 모자랍니다. '+RN_TXT+'이 필요합니다.');
   $('rnBtn').disabled=true;say('이름을 확인하는 중입니다.',true);
   const taken=await nameTaken(v);$('rnBtn').disabled=false;
   if(taken)return say('이미 다른 부대가 쓰는 이름입니다.');
   if(S.gold<cost)return say('돈이 모자랍니다.');
   const old=S.unit;S.gold-=cost;S.unit=v;S.rn=(S.rn|0)+1;fbLast='';
   hist('부대 이름 변경: '+old+' → '+v);dirty.chips=true;save();cloudDirty=true;flushCloud(true);dirty.rank=true;
-  $('rnIn').value='';rnShow();say('부대 이름을 '+v+'(으)로 바꿨습니다'+(cost?' (-'+fmt(cost)+'원)':'')+'.',true);});
+  $('rnIn').value='';rnShow();say('부대 이름을 '+v+'(으)로 바꿨습니다'+(cost?' (-'+RN_TXT+')':'')+'.',true);});
 $('rnIn').addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Enter')$('rnBtn').click();});
 $('cpBtn').addEventListener('click',()=>{if(!S)return;const r=cpUse($('cpCode').value),m=$('cpMsg');m.textContent=r[1];m.className='cp-msg '+(r[0]?'ok':'no');
   if(r[0]){$('cpCode').value='';SFX.play('coin');log('쿠폰 사용: '+r[1],'up');render();}else SFX.play('slip');});
@@ -3141,7 +3141,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-163123';
+const VER='2026.11.16-163154';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
