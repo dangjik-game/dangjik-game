@@ -2817,10 +2817,20 @@ function layout(){
   if(V3)V3.resize();
 }
 let layT=[];
-function relayout(){layout();layT.forEach(clearTimeout);layT=[120,350,800].map(ms=>setTimeout(layout,ms));}
+function relayout(){layout();setTimeout(fitTop,0);layT.forEach(clearTimeout);layT=[120,350,800].map(ms=>setTimeout(layout,ms));}
 window.addEventListener('resize',relayout);window.addEventListener('orientationchange',relayout);
 if(window.visualViewport)window.visualViewport.addEventListener('resize',relayout);
 window.addEventListener('pageshow',relayout);layout();
+/* 세로 화면: 왼쪽 위 상태판 높이가 늘면(벌점·표창 줄) 칩 줄과 임무 목록을 그만큼 아래로 내린다 */
+function fitTop(){
+  const hud=document.querySelector('.hud'),ch=$('chips'),ms=document.querySelector('.missions');if(!hud||!ch)return;
+  const port=document.body.classList.contains('port')||!!document.querySelector('.port');
+  if(!port){ch.style.top='';if(ms)ms.style.marginTop='';return;}
+  ch.style.top=Math.max(106,hud.offsetTop+hud.offsetHeight+6)+'px';
+  if(ms){ms.style.marginTop='';const gap=ch.getBoundingClientRect().bottom+6-ms.getBoundingClientRect().top;if(gap>0)ms.style.marginTop=(52+gap)+'px';}
+}
+if(window.ResizeObserver){const ro=new ResizeObserver(()=>fitTop());const h=document.querySelector('.hud');if(h)ro.observe(h);ro.observe($('chips'));}
+
 $('orientBtn').addEventListener('click',()=>{
   mode=mode==='port'?'land':'port';try{localStorage.setItem(OKEY,mode);}catch(e){}
   stopInput();layout();toast(mode==='land'?(rot?'가로 화면입니다. 휴대폰을 가로로 돌려 잡으세요':'가로 화면입니다'):'세로 화면입니다');
@@ -3102,7 +3112,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.16-143225';
+const VER='2026.11.16-143427';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
