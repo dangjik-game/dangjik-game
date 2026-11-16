@@ -3,6 +3,8 @@ on:
   push:
     branches: [ android ]
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,6 +36,12 @@ jobs:
           ./gradlew assembleDebug --no-daemon 2>&1 | tee build.log || { { grep -B2 -A12 "What went wrong" build.log; grep -iE "^e:|error:" build.log; } | head -40 | while IFS= read -r l; do echo "::error::$l"; done; exit 1; }
       - uses: actions/upload-artifact@v4
         with: { name: 시험용-apk, path: android/app/build/outputs/apk/debug/*.apk }
+      - name: 시험용 APK를 공개 다운로드 링크로 올리기
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk dangjik-test.apk
+          gh release view app-test >/dev/null 2>&1 || gh release create app-test --prerelease --target android --title "시험용 앱 (APK)" --notes "휴대폰에서 받아 설치해 보는 시험용 버전입니다. 플레이스토어 출시용이 아닙니다."
+          gh release upload app-test dangjik-test.apk --clobber
       - name: 출시용 AAB (서명 키가 등록돼 있을 때만)
         if: env.HAS_KEY == 'true'
         working-directory: android
