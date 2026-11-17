@@ -1984,7 +1984,7 @@ function dailyCheck(){
   const today=kstDay();if(S.dl.last===today)return;
   const y=kstDay(new Date(kstNow().getTime()-864e5));
   S.dl.streak=S.dl.last===y?S.dl.streak+1:1;S.dl.last=today;
-  const d=((S.dl.streak-1)%7)+1,big=d===7,g=shiftPay(big?3:.4+.2*d);
+  const d=((S.dl.streak-1)%7)+1,big=d===7,g=shiftPay(big?3:.4+.2*d)*10;/* 출석 보상 10배 */
   S.gold+=g;if(big)S.rep=clamp(S.rep+2,0,100);
   hist('출석 '+S.dl.streak+'일째 보상 +'+fmt(g)+'원','up');save();
   const cells=[1,2,3,4,5,6,7].map(i=>'<span class="dl-c'+(i<d?' got':i===d?' now':'')+'"><b>'+i+'일</b>'+(i===7?'★':i<=d?'✓':'')+'</span>').join('');
@@ -3810,7 +3810,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.17-195526';
+const VER='2026.11.17-195838';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
