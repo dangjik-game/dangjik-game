@@ -3678,8 +3678,8 @@ $('soundBtn').textContent=SFX.on?'소리 켬':'소리 끔';
 $('soundBtn').addEventListener('click',()=>{$('soundBtn').textContent=SFX.toggle()?'소리 켬':'소리 끔';});
 /* ───── 쿠폰: 코드 → 돈이나 옷. rep이 있으면 여러 번 쓸 수 있다(시험용) ───── */
 const COUPON={WELCOME:{g:1e4},DANGJIK:{g:5e4},GOLDRUSH:{g:1e6},TESTGOLD:{g:1e8,rep:1},GOLDSUIT:{wear:'gold'}};
-/* 금액별 1회용 쿠폰 3장씩: MAN100A(100만) · MAN1000A(1,000만) · EOK1A(1억) */
-[['MAN100',1e6],['MAN1000',1e7],['EOK1',1e8]].forEach(([n,g])=>['A','B','C'].forEach(x=>COUPON[n+x]={g}));
+/* 금액별 1회용 쿠폰 3장씩: MAN100A(100만) · MAN1000A(1,000만) · EOK1A(1억) · EOK10A(10억) · EOK100A(100억) · EOK1000A(1,000억) · JO1A(1조) */
+[['MAN100',1e6],['MAN1000',1e7],['EOK1',1e8],['EOK10',1e9],['EOK100',1e10],['EOK1000',1e11],['JO1',1e12]].forEach(([n,g])=>['A','B','C'].forEach(x=>COUPON[n+x]={g}));
 /* 주식 쿠폰: 받는 순간의 시세를 산 값으로 친다 */
 [['HANBYUL','hb'],['DAEHAN','dh'],['VOLT','vt'],['AURORA','ar']].forEach(([n,id])=>[1,10].forEach(q=>COUPON[n+q]={stk:id,q}));
 function cpUse(v){
@@ -3805,7 +3805,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.17-183822';
+const VER='2026.11.17-185230';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
