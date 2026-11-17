@@ -860,8 +860,9 @@ function init(canvas,hooks){
     auto={id:id,pts:pts,i:0,t0:t};wantRy=null;return true;
   }
   /* 손이 닿는 범위: 가구나 벽 설비가 놓인 자리에서 잰다. 앞이든 옆이든 뒤든 가까이만 가면 된다 */
-  const ZONE={board:[-1.35,1.35,-3.97,-3.9],cctv:BOXES[0],mic:BOXES[1],key:[-6,-5.82,-2.25,-.95],gun:BOXES[4],door:[5.9,6,-2.4,-1.2],
-    panel:[5.84,6,.25,.95],aid:[5.84,6,2.07,2.73],pc:BOXES[2],phone:BOXES[3],water:BOXES[6],boss:BOXES[7]};
+  /* 스테이션 구역은 번호(BOXES[n])가 아니라 좌표를 직접 적는다. 물체를 더 넣어도 어긋나지 않게 */
+  const ZONE={board:[-1.35,1.35,-3.97,-3.9],cctv:[-4.7,-2.5,-3.9,-3.2],mic:[2.85,4.35,-3.93,-3.27],key:[-6,-5.82,-2.25,-.95],gun:[-6,-5.3,.4,2.4],door:[5.9,6,-2.4,-1.2],
+    panel:[5.84,6,.25,.95],aid:[5.84,6,2.07,2.73],pc:[-2.65,-.95,-1.0,-.2],phone:[1.25,2.35,-.95,-.25],water:[-5.63,-5.17,3.12,3.58],boss:[-.65,.65,-1.3,.1]};
   const REACH=.85,zo={x:0,z:0};
   function zoneAt(id){const z=ZONE[id];if(!z){const s=ST[id];zo.x=s.x;zo.z=s.z;}else{zo.x=clamp(pos.x,z[0],z[1]);zo.z=clamp(pos.z,z[2],z[3]);}return Math.hypot(pos.x-zo.x,pos.z-zo.z);}
   function faceOf(id){const d=zoneAt(id);if(id==='boss')return Math.atan2(-pos.x,-.9-pos.z);return d>.02?Math.atan2(zo.x-pos.x,zo.z-pos.z):ST[id].ry;}
@@ -3806,7 +3807,7 @@ $('resetBtn').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopInput();if(S&&!paused){save();flushCloud(true);}}});
 /* ───── 새 버전 알림: GitHub 주소에서만. 올라간 페이지의 버전 표시가 지금과 다르면 위에 띠를 띄운다 ───── */
-const VER='2026.11.17-190335';
+const VER='2026.11.17-190533';
 function checkUpdate(){
   if(!/github\.io$/.test(location.hostname)||$('updBar'))return;
   try{fetch(location.pathname+'?vc='+Date.now(),{cache:'no-store'}).then(r=>r.text()).then(tx=>{
